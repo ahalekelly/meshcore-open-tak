@@ -244,8 +244,7 @@ class TransitReport {
     TransitKind.search => 'STOPS',
     TransitKind.alerts => 'ALERTS',
     TransitKind.alert => 'ALERT',
-    _ => switch (routeMode ??
-        (arrivals.isEmpty ? null : arrivals.first.mode)) {
+    _ => switch (routeMode ?? (arrivals.isEmpty ? null : arrivals.first.mode)) {
       TransitMode.ferry => 'FERRY',
       TransitMode.train => 'TRAIN',
       TransitMode.rail => 'RAIL',
@@ -543,13 +542,7 @@ DateTime? transitPlanTime(String? clock, DateTime sent) {
   final base = sent.subtract(const Duration(hours: 1));
   for (var d = 0; d < 2; d++) {
     for (final hh in [h % 12, h % 12 + 12]) {
-      final t = DateTime(
-        sent.year,
-        sent.month,
-        sent.day + d,
-        hh,
-        m,
-      );
+      final t = DateTime(sent.year, sent.month, sent.day + d, hh, m);
       if (!t.isBefore(base)) return t;
     }
   }

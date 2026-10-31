@@ -38,7 +38,11 @@ void main() {
     expect(r.lon, closeTo(-122.3, 1e-9));
     expect(r.offline, isTrue);
     expect(r.also, ['ct 1120']);
-    expect(r.arrivals.map((a) => a.route), ['11', 'G Line', 'Seattle-Bainbridge']);
+    expect(r.arrivals.map((a) => a.route), [
+      '11',
+      'G Line',
+      'Seattle-Bainbridge',
+    ]);
     expect(r.arrivals[0].mode, TransitMode.bus);
     expect(r.arrivals[0].minutes, 5);
     expect(r.arrivals[0].scheduled, isTrue);
@@ -54,7 +58,10 @@ void main() {
     final a = parseTransit('🚏 Stop\n🚌 11 - 5 mins')!.arrivals.single;
     final at = a.at(_sent)!;
     expect(transitCountdown(at, _sent), '5 min');
-    expect(transitCountdown(at, _sent.add(const Duration(minutes: 3))), '2 min');
+    expect(
+      transitCountdown(at, _sent.add(const Duration(minutes: 3))),
+      '2 min',
+    );
     expect(transitCountdown(at, _sent.add(const Duration(minutes: 5))), 'due');
     expect(transitCountdown(at, _sent.add(const Duration(minutes: 9))), 'gone');
   });
@@ -84,8 +91,9 @@ void main() {
     expect(r.warns, isTrue);
     expect(parseTransit('🚏 Stop\n✅ No alerts.')!.alertsClear, isTrue);
     expect(
-      parseTransit("🚏 Stop\n📴 Can't reach live alerts right now.")!
-          .alertsUnknown,
+      parseTransit(
+        "🚏 Stop\n📴 Can't reach live alerts right now.",
+      )!.alertsUnknown,
       isTrue,
     );
   });
@@ -110,8 +118,10 @@ void main() {
     expect(r.legs[1].to, '1121');
     expect(r.legs[2].arrive, '8:25');
     expect(transitPlanTime('8:25', _sent), DateTime(2026, 10, 27, 8, 25));
-    expect(transitPlanTime('1:05', DateTime(2026, 10, 27, 23, 50)),
-        DateTime(2026, 10, 28, 1, 5));
+    expect(
+      transitPlanTime('1:05', DateTime(2026, 10, 27, 23, 50)),
+      DateTime(2026, 10, 28, 1, 5),
+    );
   });
 
   test('stops found', () {

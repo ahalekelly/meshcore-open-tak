@@ -438,7 +438,8 @@ WatchItem parseWatchMessage(
     m.text,
     alertPosts: channel.name.toLowerCase().contains('transit'),
   );
-  if (transit != null) return _transitItem(channel, m, transit, time ?? m.timestamp);
+  if (transit != null)
+    return _transitItem(channel, m, transit, time ?? m.timestamp);
 
   final mk = _markerRe.firstMatch(m.text);
   if (mk != null) {

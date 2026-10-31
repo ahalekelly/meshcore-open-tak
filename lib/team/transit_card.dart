@@ -84,9 +84,7 @@ class _TransitDetailsState extends State<TransitDetails> {
       if (r.route != null && r.routeMode != null) r.routeMode!.label,
     ];
     if (facts.isNotEmpty) {
-      children.add(
-        Text(facts.join(' · '), style: t.labelMedium, maxLines: 1),
-      );
+      children.add(Text(facts.join(' · '), style: t.labelMedium, maxLines: 1));
       gap();
     }
 
@@ -108,7 +106,10 @@ class _TransitDetailsState extends State<TransitDetails> {
     }
     if (!full && r.arrivals.length > arrivals.length) {
       children.add(
-        Text('+${r.arrivals.length - arrivals.length} more', style: t.bodySmall),
+        Text(
+          '+${r.arrivals.length - arrivals.length} more',
+          style: t.bodySmall,
+        ),
       );
     }
     if (r.noTrips) {
@@ -212,10 +213,7 @@ class _TransitDetailsState extends State<TransitDetails> {
       if (r.also.isNotEmpty) {
         gap();
         children.add(
-          Text(
-            'Same stop number at: ${r.also.join(', ')}',
-            style: t.bodySmall,
-          ),
+          Text('Same stop number at: ${r.also.join(', ')}', style: t.bodySmall),
         );
       }
       for (final n in r.notes) {
@@ -312,8 +310,7 @@ class _ArrivalRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (at != null)
-              Text(_clock(context, at), style: t.bodyMedium),
+            if (at != null) Text(_clock(context, at), style: t.bodyMedium),
             const SizedBox(width: 8),
             Tooltip(
               message: a.scheduled
