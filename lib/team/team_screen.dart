@@ -31,6 +31,7 @@ import 'team_service.dart';
 import 'team_setup_ui.dart';
 import 'team_wire.dart';
 import 'team_wire_atak.dart' show TeamPoint;
+import 'transit_card.dart';
 import 'watch_feed.dart';
 import 'watch_sounds.dart';
 
@@ -817,6 +818,15 @@ class _WatchCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            // A transit bot's reply, laid out in full.
+            if (it.transit != null) ...[
+              const SizedBox(height: 6),
+              TransitDetails(
+                report: it.transit!,
+                sent: it.time,
+                expanded: expanded,
+              ),
+            ],
             if (!expanded && replies.isNotEmpty) ...[
               const SizedBox(height: 2),
               Row(
@@ -845,11 +855,13 @@ class _WatchCard extends StatelessWidget {
               ),
             ],
             if (expanded) ...[
-              const SizedBox(height: 6),
-              Text.rich(
-                watchMarked(it.message.text, words, mark),
-                style: t.bodyMedium,
-              ),
+              if (it.transit == null) ...[
+                const SizedBox(height: 6),
+                Text.rich(
+                  watchMarked(it.message.text, words, mark),
+                  style: t.bodyMedium,
+                ),
+              ],
               const SizedBox(height: 4),
               Text(
                 'From ${it.message.senderName} · ${teamAgo(it.time)}',

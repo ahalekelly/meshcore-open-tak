@@ -28,6 +28,7 @@ import 'team_wire.dart'
         teamBearingDeg,
         teamDistanceMeters,
         watchReplyText;
+import 'transit_watch.dart';
 import 'watch_sounds.dart';
 
 /// Status levels found in feed reports, most urgent first.
@@ -76,6 +77,9 @@ class WatchItem {
   /// An earthquake report's magnitude ("Earthquake M3.9 …"), else null.
   final double? magnitude;
 
+  /// A transit bot's reply (BusBot), read into a full card.
+  final TransitReport? transit;
+
   const WatchItem({
     required this.channel,
     required this.message,
@@ -96,6 +100,7 @@ class WatchItem {
     this.detail,
     this.bearing,
     this.magnitude,
+    this.transit,
   });
 
   bool get hasSecondPosition => lat2 != null && lon2 != null;
@@ -162,7 +167,13 @@ class WatchItem {
     detail: detail,
     bearing: bearing,
     magnitude: magnitude,
+    transit: transit,
   );
+
+  /// This transit reply with the rest of it (the next message of a reply
+  /// the bot split in two) added.
+  WatchItem withTransitPart(TransitReport part) =>
+      _transitItem(channel, message, transit!.merge(part), time);
 
   bool get isStructured =>
       statusWord != null || place != null || counts.isNotEmpty;
@@ -423,6 +434,12 @@ WatchItem parseWatchMessage(
     return (x, y);
   }
 
+  final transit = parseTransit(
+    m.text,
+    alertPosts: channel.name.toLowerCase().contains('transit'),
+  );
+  if (transit != null) return _transitItem(channel, m, transit, time ?? m.timestamp);
+
   final mk = _markerRe.firstMatch(m.text);
   if (mk != null) {
     final v = valid(mk.group(1), mk.group(2));
@@ -565,6 +582,27 @@ WatchItem parseWatchMessage(
     magnitude: magnitude,
   );
 }
+
+WatchItem _transitItem(
+  Channel channel,
+  ChannelMessage m,
+  TransitReport t,
+  DateTime time,
+) => WatchItem(
+  channel: channel,
+  message: m,
+  level: t.warns
+      ? WatchLevel.active
+      : t.offline
+      ? WatchLevel.none
+      : WatchLevel.other,
+  statusWord: t.status,
+  place: t.headline,
+  lat: t.lat,
+  lon: t.lon,
+  time: time,
+  transit: t,
+);
 
 /// How long watched reports stay on the map; null = always.
 const List<Duration?> watchMapTtlChoices = [
@@ -1009,6 +1047,17 @@ class WatchFeedService extends ChangeNotifier {
         }
         final key = '${c.index}:${m.messageId}';
         final it = parseWatchMessage(c, m, time: _timeOf(key, m.timestamp));
+        // The rest of a transit bot's reply it split over messages.
+        final part = it.transit;
+        if (part != null && !part.hasHeader && chan.isNotEmpty) {
+          final prev = chan.last;
+          if (prev.transit != null &&
+              prev.message.senderName == m.senderName &&
+              it.time.difference(prev.time).inMinutes.abs() <= 2) {
+            chan[chan.length - 1] = prev.withTransitPart(part);
+            continue;
+          }
+        }
         // A bot's bare link right after its own report belongs to that report.
         if (it.isBareLink && chan.isNotEmpty) {
           final prev = chan.last;
