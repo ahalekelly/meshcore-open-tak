@@ -245,6 +245,7 @@ class TransitReport {
 
   /// The Watch card's status word.
   String get status => switch (kind) {
+    TransitKind.part when continues != null => 'ALERT',
     TransitKind.plan => 'TRIP',
     TransitKind.search => 'STOPS',
     TransitKind.alerts => 'ALERTS',
@@ -398,9 +399,12 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
   final first = lines.first;
   // The second message of a long alert post: "… the rest".
   if (alertPosts && lines.length == 1 && first.startsWith('… ')) {
+    final rest = first.substring(2).trim();
     return TransitReport(
       kind: TransitKind.part,
-      continues: first.substring(2).trim(),
+      title: 'Service alert, continued',
+      alerts: ['… $rest'],
+      continues: rest,
     );
   }
   RegExpMatch? h;

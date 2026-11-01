@@ -9,12 +9,12 @@ import 'package:meshcore_open/team/watch_feed.dart';
 final _ch = Channel(index: 4, name: '#transit', psk: Uint8List(16));
 final _sent = DateTime(2026, 10, 27, 8, 10);
 
-WatchItem _item(String text) => parseWatchMessage(
+WatchItem _item(String text, {DateTime? at}) => parseWatchMessage(
   _ch,
   ChannelMessage(
     senderName: 'SeaBot',
     text: text,
-    timestamp: _sent,
+    timestamp: at ?? _sent,
     isOutgoing: false,
   ),
 );
@@ -183,5 +183,27 @@ void main() {
     expect(it.place, '3rd Ave & Pike St, Bay 2');
     expect(it.level, WatchLevel.other);
     expect(it.hasPosition, isTrue);
+  });
+
+  test('a long alert post is joined in either order', () {
+    final head = _item(
+      '⚠️ 331: Route 331 trip to UW Bothell from Shoreline is not …',
+    );
+    final rest = _item(
+      '… operating today.',
+      at: _sent.add(const Duration(seconds: 2)),
+    );
+    expect(rest.statusWord, 'ALERT');
+    const whole = [
+      'Route 331 trip to UW Bothell from Shoreline is not operating today.',
+    ];
+    expect(joinTransitParts(head, rest)!.transit!.alerts, whole);
+    // the second part heard first
+    final swapped = joinTransitParts(rest, head)!;
+    expect(swapped.transit!.alerts, whole);
+    expect(swapped.statusWord, 'ALERT');
+    expect(swapped.place, '331');
+    // two separate replies stay apart
+    expect(joinTransitParts(head, head), isNull);
   });
 }

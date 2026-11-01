@@ -584,6 +584,23 @@ WatchItem parseWatchMessage(
   );
 }
 
+/// [prev] and [it] (the next message) joined into one transit card when they
+/// are two parts of one reply the bot split over messages, else null. The
+/// parts can arrive in either order (the mesh may deliver the second first),
+/// so a part joins the reply before it, and a reply the part before it.
+WatchItem? joinTransitParts(WatchItem prev, WatchItem it) {
+  final pt = prev.transit, tr = it.transit;
+  if (pt == null ||
+      tr == null ||
+      prev.message.senderName != it.message.senderName ||
+      it.time.difference(prev.time).inMinutes.abs() > 2) {
+    return null;
+  }
+  if (!tr.hasHeader) return prev.withTransitPart(tr);
+  if (!pt.hasHeader) return it.withTransitPart(pt);
+  return null;
+}
+
 WatchItem _transitItem(
   Channel channel,
   ChannelMessage m,
@@ -1049,13 +1066,10 @@ class WatchFeedService extends ChangeNotifier {
         final key = '${c.index}:${m.messageId}';
         final it = parseWatchMessage(c, m, time: _timeOf(key, m.timestamp));
         // The rest of a transit bot's reply it split over messages.
-        final part = it.transit;
-        if (part != null && !part.hasHeader && chan.isNotEmpty) {
-          final prev = chan.last;
-          if (prev.transit != null &&
-              prev.message.senderName == m.senderName &&
-              it.time.difference(prev.time).inMinutes.abs() <= 2) {
-            chan[chan.length - 1] = prev.withTransitPart(part);
+        if (chan.isNotEmpty) {
+          final joined = joinTransitParts(chan.last, it);
+          if (joined != null) {
+            chan[chan.length - 1] = joined;
             continue;
           }
         }

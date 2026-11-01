@@ -79,7 +79,8 @@ class _TransitDetailsState extends State<TransitDetails> {
       if (r.stopRef != null) 'Stop ${r.stopRef}',
       if (r.kind != TransitKind.plan &&
           r.kind != TransitKind.search &&
-          r.kind != TransitKind.alert)
+          r.kind != TransitKind.alert &&
+          (r.kind != TransitKind.part || r.stopRef != null))
         transitAgencyName(r.agency ?? _agencyOfRef(r.stopRef)),
       if (r.route != null && r.routeMode != null) r.routeMode!.label,
     ];
