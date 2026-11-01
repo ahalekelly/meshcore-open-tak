@@ -141,6 +141,14 @@ void main() {
     expect(r.kind, TransitKind.alert);
     expect(r.title, 'CT 201');
     expect(parseTransit('⚠️ CT 201: Detour on Hwy 99'), isNull);
+    // a long one in two messages is joined back together
+    final head = parseTransit('⚠️ 11: No service on 3rd Ave …', alertPosts: true)!;
+    final rest = parseTransit('… due to police activity', alertPosts: true)!;
+    expect(rest.hasHeader, isFalse);
+    expect(head.merge(rest).alerts, [
+      'No service on 3rd Ave due to police activity',
+    ]);
+    expect(parseTransit('… due to police activity'), isNull);
   });
 
   test("other channels' messages aren't transit", () {

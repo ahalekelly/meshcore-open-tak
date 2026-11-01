@@ -211,6 +211,10 @@ class TransitReport {
   /// Lines this doesn't model, as written.
   final List<String> notes;
 
+  /// The rest of an alert post that the bot sent as two messages
+  /// ("⚠️ … text …", then "… the rest").
+  final String? continues;
+
   const TransitReport({
     required this.kind,
     this.title,
@@ -233,6 +237,7 @@ class TransitReport {
     this.legs = const [],
     this.stops = const [],
     this.notes = const [],
+    this.continues,
   });
 
   bool get hasHeader => kind != TransitKind.part;
@@ -286,7 +291,13 @@ class TransitReport {
     lat: lat ?? part.lat,
     lon: lon ?? part.lon,
     arrivals: [...arrivals, ...part.arrivals],
-    alerts: [...alerts, ...part.alerts],
+    alerts: part.continues != null && alerts.isNotEmpty
+        ? [
+            ...alerts.sublist(0, alerts.length - 1),
+            '${alerts.last.replaceFirst(RegExp(r'\s*…$'), '')} '
+                '${part.continues}',
+          ]
+        : [...alerts, ...part.alerts],
     alertsClear: alertsClear || part.alertsClear,
     alertsUnknown: alertsUnknown || part.alertsUnknown,
     offline: offline || part.offline,
@@ -385,6 +396,13 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
 
   var body = lines;
   final first = lines.first;
+  // The second message of a long alert post: "… the rest".
+  if (alertPosts && lines.length == 1 && first.startsWith('… ')) {
+    return TransitReport(
+      kind: TransitKind.part,
+      continues: first.substring(2).trim(),
+    );
+  }
   RegExpMatch? h;
   if ((h = _planHeadRe.firstMatch(first)) != null) {
     kind = TransitKind.plan;
