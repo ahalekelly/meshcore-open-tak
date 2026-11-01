@@ -221,5 +221,4 @@ void main() {
     // two whole replies stay apart
     expect(joinTransitParts(head, head), isNull);
   });
-
 }
