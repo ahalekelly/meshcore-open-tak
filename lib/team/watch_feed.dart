@@ -596,6 +596,17 @@ WatchItem? joinTransitParts(WatchItem prev, WatchItem it) {
       it.time.difference(prev.time).inMinutes.abs() > 2) {
     return null;
   }
+  // A long alert post's halves: only by their shared tag, never by guess.
+  if (pt.continues != null ||
+      tr.continues != null ||
+      pt.partIndex != null ||
+      tr.partIndex != null) {
+    if (pt.partTag == null || pt.partTag != tr.partTag) return null;
+    if (pt.partIndex == 1 && tr.partIndex == 2) return prev.withTransitPart(tr);
+    if (pt.partIndex == 2 && tr.partIndex == 1) return it.withTransitPart(pt);
+    return null;
+  }
+  if (pt.kind == TransitKind.alert || tr.kind == TransitKind.alert) return null;
   if (!tr.hasHeader) return prev.withTransitPart(tr);
   if (!pt.hasHeader) return it.withTransitPart(pt);
   return null;

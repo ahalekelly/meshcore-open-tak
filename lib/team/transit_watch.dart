@@ -215,6 +215,12 @@ class TransitReport {
   /// ("⚠️ … text …", then "… the rest").
   final String? continues;
 
+  /// A long alert post's halves end with the same tag, "[1/2 k3]" and
+  /// "[2/2 k3]": [partTag] "k3", [partIndex] 1 or 2. Only halves with the
+  /// same tag are joined.
+  final String? partTag;
+  final int? partIndex;
+
   const TransitReport({
     required this.kind,
     this.title,
@@ -238,6 +244,8 @@ class TransitReport {
     this.stops = const [],
     this.notes = const [],
     this.continues,
+    this.partTag,
+    this.partIndex,
   });
 
   bool get hasHeader => kind != TransitKind.part;
@@ -292,6 +300,7 @@ class TransitReport {
     lat: lat ?? part.lat,
     lon: lon ?? part.lon,
     arrivals: [...arrivals, ...part.arrivals],
+    partTag: partTag ?? part.partTag,
     alerts: part.continues != null && alerts.isNotEmpty
         ? [
             ...alerts.sublist(0, alerts.length - 1),
@@ -325,6 +334,7 @@ final _planHeadRe = RegExp(
   r'(?:\s+·\s+(\d+)\s+transfers?)?\s+·\s+timetable$',
 );
 final _searchHeadRe = RegExp(r'^(?:🔎|📍)\s+(.+):$');
+final _partTagRe = RegExp(r'\s*\[([12])/2 ([0-9a-z]{2})\]$');
 final _alertPostRe = RegExp(r'^⚠\uFE0F?\s+(?:([^:\n]{1,40}):\s+)?(.+)$');
 const _timeAlt = r'now|\d+\s+mins?|\d{1,2}:\d{2}';
 final _arrivalRe = RegExp(
@@ -397,14 +407,23 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
 
   var body = lines;
   final first = lines.first;
+  // A long alert post's tag: "… [1/2 k3]" / "… [2/2 k3]".
+  final tag = alertPosts && lines.length == 1
+      ? _partTagRe.firstMatch(first)
+      : null;
+  final post = tag == null ? first : first.substring(0, tag.start);
+  final partTag = tag?[2];
+  final partIndex = tag == null ? null : int.parse(tag[1]!);
   // The second message of a long alert post: "… the rest".
-  if (alertPosts && lines.length == 1 && first.startsWith('… ')) {
-    final rest = first.substring(2).trim();
+  if (alertPosts && lines.length == 1 && post.startsWith('… ')) {
+    final rest = post.substring(2).trim();
     return TransitReport(
       kind: TransitKind.part,
       title: 'Service alert, continued',
       alerts: ['… $rest'],
       continues: rest,
+      partTag: partTag,
+      partIndex: partIndex,
     );
   }
   RegExpMatch? h;
@@ -440,7 +459,7 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
     body = lines.sublist(1);
   } else if (alertPosts &&
       lines.length == 1 &&
-      (h = _alertPostRe.firstMatch(first)) != null) {
+      (h = _alertPostRe.firstMatch(post)) != null) {
     // "⚠ CT 201/202: Detour on …": a post of its own (an alerts reply's
     // lines come after its 🚏 header)
     kind = TransitKind.alert;
@@ -519,6 +538,8 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
     kind = TransitKind.alerts;
   }
   return TransitReport(
+    partTag: kind == TransitKind.alert ? partTag : null,
+    partIndex: kind == TransitKind.alert ? partIndex : null,
     kind: kind,
     title: title,
     agency: agency,

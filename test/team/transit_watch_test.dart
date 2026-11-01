@@ -143,11 +143,18 @@ void main() {
     expect(parseTransit('⚠️ CT 201: Detour on Hwy 99'), isNull);
     // a long one in two messages is joined back together
     final head = parseTransit(
-      '⚠️ 11: No service on 3rd Ave …',
+      '⚠️ 11: No service on 3rd Ave … [1/2 k3]',
       alertPosts: true,
     )!;
-    final rest = parseTransit('… due to police activity', alertPosts: true)!;
+    expect(head.partTag, 'k3');
+    expect(head.partIndex, 1);
+    final rest = parseTransit(
+      '… due to police activity [2/2 k3]',
+      alertPosts: true,
+    )!;
     expect(rest.hasHeader, isFalse);
+    expect(rest.partTag, 'k3');
+    expect(rest.partIndex, 2);
     expect(head.merge(rest).alerts, [
       'No service on 3rd Ave due to police activity',
     ]);
@@ -185,13 +192,13 @@ void main() {
     expect(it.hasPosition, isTrue);
   });
 
-  test('a long alert post is joined in either order', () {
+  test('a long alert post is joined by its tag, in either order', () {
     final head = _item(
-      '⚠️ 331: Route 331 trip to UW Bothell from Shoreline is not …',
+      '⚠️ 331: Route 331 trip to UW Bothell from Shoreline is not … [1/2 k3]',
     );
     final rest = _item(
-      '… operating today.',
-      at: _sent.add(const Duration(seconds: 2)),
+      '… operating today. [2/2 k3]',
+      at: _sent.add(const Duration(seconds: 8)),
     );
     expect(rest.statusWord, 'ALERT');
     const whole = [
@@ -203,7 +210,16 @@ void main() {
     expect(swapped.transit!.alerts, whole);
     expect(swapped.statusWord, 'ALERT');
     expect(swapped.place, '331');
-    // two separate replies stay apart
+    // never by guess: another alert's half, an untagged half, or a bus reply
+    final other = _item('… running late. [2/2 x9]');
+    expect(joinTransitParts(head, other), isNull);
+    expect(joinTransitParts(head, _item('… operating today.')), isNull);
+    final bus = _item('🚏 3rd Ave & Pike St, Bay 2\n🚌 11 - 5 mins');
+    expect(joinTransitParts(bus, rest), isNull);
+    expect(joinTransitParts(rest, bus), isNull);
+    expect(joinTransitParts(head, _item('🚍 G Line - 18 mins')), isNull);
+    // two whole replies stay apart
     expect(joinTransitParts(head, head), isNull);
   });
+
 }
