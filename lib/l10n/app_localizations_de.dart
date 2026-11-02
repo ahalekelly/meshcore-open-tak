@@ -2758,7 +2758,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get publicMedia_title => 'Photos and voice on Public';
 
   @override
-  String get publicMedia_subtitle => 'Photos, voice messages and push-to-talk on Public and #public. Everyone on the mesh shares these channels, so this is off by default.';
+  String get publicMedia_subtitle =>
+      'Photos, voice messages and push-to-talk on Public and #public. Everyone on the mesh shares these channels, so this is off by default.';
 
   @override
   String get publicMedia_warning => 'Only switch this on in an emergency.';
@@ -2767,16 +2768,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get publicMedia_offTitle => 'Photos and voice are off here';
 
   @override
-  String get publicMedia_offBody => 'Everyone on the mesh shares Public and #public, so photos, voice messages and push-to-talk are off on them. Please use another channel.';
+  String get publicMedia_offBody =>
+      'Everyone on the mesh shares Public and #public, so photos, voice messages and push-to-talk are off on them. Please use another channel.';
 
   @override
   String get publicMedia_offTooltip => 'Photos and voice are off on Public';
 
   @override
-  String get publicMedia_turnedOn => 'Photos and voice are on for Public and #public. Switch them off when the emergency is over.';
+  String get publicMedia_turnedOn =>
+      'Photos and voice are on for Public and #public. Switch them off when the emergency is over.';
 
   @override
-  String get publicMedia_turnedOff => 'Photos and voice are off on Public and #public';
+  String get publicMedia_turnedOff =>
+      'Photos and voice are off on Public and #public';
 
   @override
   String get repeater_management => 'Repeater-Verwaltung';

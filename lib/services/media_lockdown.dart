@@ -39,8 +39,7 @@ class MediaLockdown {
 
   /// Public (the well-known key) or #public: the channels everyone shares.
   static bool isPublicMediaChannel(Channel channel) =>
-      channel.isPublicChannel ||
-      channel.name.trim().toLowerCase() == '#public';
+      channel.isPublicChannel || channel.name.trim().toLowerCase() == '#public';
 
   /// Whether photos and voice are refused on [channel].
   static bool blocksChannel(Channel channel) =>
