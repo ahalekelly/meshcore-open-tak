@@ -175,6 +175,16 @@ class _TransitDetailsState extends State<TransitDetails> {
           Text('+${r.legs.length - 2} more steps', style: t.bodySmall),
         );
       }
+      if (r.alternative != null) {
+        gap();
+        children.add(
+          _Banner(
+            icon: Icons.airline_seat_recline_normal,
+            text: 'Or no change: ${r.alternative}',
+            color: scheme.primary,
+          ),
+        );
+      }
     }
 
     // Stops found.

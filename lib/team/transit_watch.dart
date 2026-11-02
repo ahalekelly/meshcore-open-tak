@@ -211,6 +211,9 @@ class TransitReport {
   /// Lines this doesn't model, as written.
   final List<String> notes;
 
+  /// A trip plan's no-change alternative, after "↪ or no change:".
+  final String? alternative;
+
   /// The rest of an alert post that the bot sent as two messages
   /// ("⚠️ … text …", then "… the rest").
   final String? continues;
@@ -244,6 +247,7 @@ class TransitReport {
     this.stops = const [],
     this.notes = const [],
     this.continues,
+    this.alternative,
     this.partTag,
     this.partIndex,
   });
@@ -319,6 +323,7 @@ class TransitReport {
     legs: [...legs, ...part.legs],
     stops: [...stops, ...part.stops],
     notes: [...notes, ...part.notes],
+    alternative: alternative ?? part.alternative,
   );
 }
 
@@ -402,6 +407,7 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
   final legs = <TransitLeg>[];
   final stops = <TransitStopHit>[];
   final notes = <String>[];
+  String? alternative;
   var alertsClear = false, alertsUnknown = false, offline = false;
   var noTrips = false, strong = false;
 
@@ -522,6 +528,11 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
     } else if ((m = _arrivalRe.firstMatch(l)) != null) {
       arrivals.add(_arrival(m![1], m[2]!, m[3]!, m[4]));
       if (m[1] != null) strong = true;
+    } else if (l.startsWith('↪')) {
+      alternative = l
+          .replaceFirst(RegExp(r'^↪\uFE0F?\s*'), '')
+          .replaceFirst(RegExp(r'^or no change:\s*'), '');
+      strong = true;
     } else if (l.startsWith('➖')) {
       notes.add(l.replaceFirst(RegExp(r'^➖\s*'), ''));
     } else {
@@ -561,6 +572,7 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
     legs: legs,
     stops: stops,
     notes: notes,
+    alternative: alternative,
   );
 }
 

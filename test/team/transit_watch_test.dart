@@ -140,6 +140,15 @@ void main() {
     expect(named.legs[0].arrive, '12:58');
     expect(named.legs[1].to, 'Westlake Station');
     expect(named.stopRef, 'st 990005');
+    // the no-change alternative, also as the rest of a split reply
+    final alt = parseTransit(
+      '🚌 545 12:26 from 4th Ave & Pike St → SR 520 & NE 40th St 12:47\n'
+      '↪️ or no change: 2 Line 12:22 → Redmond Technology 1:04\n'
+      '📍 47.61956,-122.32039 · st 99610',
+    )!;
+    expect(alt.hasHeader, isFalse);
+    expect(alt.alternative, '2 Line 12:22 → Redmond Technology 1:04');
+    expect(named.merge(alt).alternative, alt.alternative);
     expect(r.legs[0].to, '3rd Ave & Pike St, Bay 2');
     expect(r.legs[1].walk, isTrue);
     expect(r.legs[1].to, '1121');
