@@ -128,6 +128,7 @@ A dedicated sub-screen for app-level preferences (nothing here is sent to the de
 Individual channels can be muted from the channel chat bell icon, the channel list, or the channel notification. Replying from notifications, watches, and Android Auto is described in [Notifications](notifications.md).
 
 ### Messaging
+- **Photos and voice on Public** (default off): Photos, voice messages and push-to-talk on Public and `#public`. Everyone on the mesh shares these channels, so they're off there: the photo, voice and walkie-talkie buttons are dimmed and explain why when tapped, with this switch. A red warning says to switch it on only in an emergency. See [MediaMesh](media-mesh.md#public-and-public)
 - **Clear Path on Max Retry**: Erases the stored routing path after all retries fail
 - **Jump to Oldest Unread**: When opening a chat, scrolls to the oldest unread message instead of the newest
 - **Auto Route Rotation**: Enables weighted routing algorithm. When enabled, expands to show five slider sub-settings (hidden when off):

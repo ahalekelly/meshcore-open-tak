@@ -37,6 +37,7 @@ import '../services/translation_service.dart';
 import '../utils/image_save.dart';
 import 'otp_pad_screen.dart';
 import '../utils/lora_airtime.dart';
+import '../widgets/public_media_switch.dart';
 import '../widgets/channel_search.dart';
 import '../widgets/marker_label_dialog.dart';
 import '../widgets/received_image_message.dart';
@@ -2680,24 +2681,40 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           ? (used, max, defaultColor) =>
                 _otpComposeCounterColor(context.read<MeshCoreConnector>(), used)
           : null,
-      idleTrailing: VoxMicButton(
-        recipientLabel: widget.channel.name,
-        codecTarget: VoxVoiceService.channelTarget(widget.channel),
-        caption: caption,
-        onSend: (clip, text) => context
-            .read<VoxVoiceService>()
-            .sendClipToChannel(widget.channel, clip, caption: text),
+      // On Public and #public these are dimmed and explain why, until
+      // "Photos and voice on Public" is switched on (emergencies only).
+      idleTrailing: PublicMediaGuard(
+        channel: widget.channel,
+        icon: Icons.mic_none,
+        visible: context.select<VoxVoiceService, bool>((v) => v.isAvailable),
+        child: VoxMicButton(
+          recipientLabel: widget.channel.name,
+          codecTarget: VoxVoiceService.channelTarget(widget.channel),
+          caption: caption,
+          onSend: (clip, text) => context
+              .read<VoxVoiceService>()
+              .sendClipToChannel(widget.channel, clip, caption: text),
+        ),
       ),
       leading: [
-        VoxImageButton(
-          aiSketch: _aiSketchOption,
-          recipientLabel: widget.channel.name,
-          caption: caption,
-          onSend: (image, text) => context
-              .read<VoxVoiceService>()
-              .sendImageToChannel(widget.channel, image, caption: text),
+        PublicMediaGuard(
+          channel: widget.channel,
+          icon: Icons.add_photo_alternate_outlined,
+          child: VoxImageButton(
+            aiSketch: _aiSketchOption,
+            recipientLabel: widget.channel.name,
+            caption: caption,
+            onSend: (image, text) => context
+                .read<VoxVoiceService>()
+                .sendImageToChannel(widget.channel, image, caption: text),
+          ),
         ),
-        WalkieButton(channel: widget.channel),
+        PublicMediaGuard(
+          channel: widget.channel,
+          icon: Icons.record_voice_over_outlined,
+          visible: context.select<WalkieService, bool>((w) => w.available),
+          child: WalkieButton(channel: widget.channel),
+        ),
       ],
       header: [
         if (replyTo != null)

@@ -4869,6 +4869,54 @@ abstract class AppLocalizations {
   /// **'No repeaters or room servers found.'**
   String get path_noRepeatersFound;
 
+  /// No description provided for @publicMedia_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and voice on Public'**
+  String get publicMedia_title;
+
+  /// No description provided for @publicMedia_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos, voice messages and push-to-talk on Public and #public. Everyone on the mesh shares these channels, so this is off by default.'**
+  String get publicMedia_subtitle;
+
+  /// No description provided for @publicMedia_warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Only switch this on in an emergency.'**
+  String get publicMedia_warning;
+
+  /// No description provided for @publicMedia_offTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and voice are off here'**
+  String get publicMedia_offTitle;
+
+  /// No description provided for @publicMedia_offBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone on the mesh shares Public and #public, so photos, voice messages and push-to-talk are off on them. Please use another channel.'**
+  String get publicMedia_offBody;
+
+  /// No description provided for @publicMedia_offTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and voice are off on Public'**
+  String get publicMedia_offTooltip;
+
+  /// No description provided for @publicMedia_turnedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and voice are on for Public and #public. Switch them off when the emergency is over.'**
+  String get publicMedia_turnedOn;
+
+  /// No description provided for @publicMedia_turnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and voice are off on Public and #public'**
+  String get publicMedia_turnedOff;
+
   /// No description provided for @repeater_management.
   ///
   /// In en, this message translates to:

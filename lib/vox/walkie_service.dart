@@ -481,6 +481,10 @@ class WalkieService extends ChangeNotifier {
     if (!voxCodecAvailable) {
       return voxCodecUnavailableReason ?? 'Voice is not available here';
     }
+    // Public and #public refuse push-to-talk unless switched on.
+    if (MediaLockdown.blocksChannel(ch)) {
+      return MediaLockdown.publicBlockedMessage;
+    }
     if (!_connector.isConnected) return 'Not connected to a radio';
     if (!_connector.supportsChannelData) {
       return "This radio's firmware can't send channel data";

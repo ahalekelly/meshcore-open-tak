@@ -1124,6 +1124,10 @@ class VoxVoiceService extends ChangeNotifier {
     VoxEncodedClip clip, {
     String caption = '',
   }) async {
+    // Public and #public refuse photos and voice unless switched on.
+    if (MediaLockdown.blocksChannel(channel)) {
+      throw const PublicMediaBlockedException();
+    }
     await _ensureMediaAllowed();
     final env = _register(clip).withCaption(
       voxFitCaption(caption, voxCaptionMaxBytes(maxChannelTextBytes(channel))),

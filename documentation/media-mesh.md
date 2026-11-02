@@ -125,6 +125,19 @@ Everyone who shares photos and voice with you needs MediaMesh on, with the same
 settings. A photo sent over MediaMesh can't be downloaded by a radio without it:
 the announcement shows up on the main mesh, but the photo's packets don't.
 
+### Public and #public
+
+Photos, voice messages and push-to-talk are off on Public and `#public`. Those
+are the channels everyone on the mesh shares, and photos and voice there show
+up as clutter for everyone, including people on other apps. In those chats the
+photo, voice and walkie-talkie buttons are dimmed; tapping one explains why and
+shows the switch. It's also in **Settings > App Settings > Messaging** as
+**Photos and voice on Public**, with a red warning to switch it on only in an
+emergency. Like OTP, which Public refuses outright, the app refuses these sends
+whatever started them (a pasted or forwarded photo too). Upstream's own image
+messages (**Send low-res image over radio**) aren't affected. Wadamesh TAK standalones have
+the same switch, also off by default.
+
 ## What moves to MediaMesh
 
 | Traffic | Where |
