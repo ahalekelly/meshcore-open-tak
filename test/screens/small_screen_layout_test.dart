@@ -46,6 +46,7 @@ import 'package:meshcore_open/services/ble_debug_log_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
 import 'package:meshcore_open/services/image_codec_service.dart';
 import 'package:meshcore_open/services/map_tile_cache_service.dart';
+import 'package:meshcore_open/services/mediamesh_coverage.dart';
 import 'package:meshcore_open/services/message_retry_service.dart';
 import 'package:meshcore_open/services/network_map/network_map_upload_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
@@ -55,7 +56,13 @@ import 'package:meshcore_open/services/timeout_prediction_service.dart';
 import 'package:meshcore_open/services/translation_service.dart';
 import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/team/drone_detector.dart';
+import 'package:meshcore_open/team/tak/tak_service.dart';
+import 'package:meshcore_open/team/team_service.dart';
+import 'package:meshcore_open/team/watch_feed.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
+import 'package:meshcore_open/vox/voice_service.dart';
+import 'package:meshcore_open/vox/walkie_service.dart';
 
 /// Renders every screen on a small phone (320x568, the narrowest common
 /// width) at several text scales, plus a desktop window, and fails on any
@@ -77,7 +84,13 @@ Future<_Env> _connect(WidgetTester tester) async {
   final retry = MessageRetryService();
   final settings = AppSettingsService();
   final translation = TranslationService(settings);
+  // The fork's services the chat and map screens read (see main.dart).
+  final voice = VoxVoiceService(connector);
   final env = _Env(connector, [
+    ChangeNotifierProvider<VoxVoiceService>.value(value: voice),
+    ChangeNotifierProvider<WalkieService>.value(
+      value: WalkieService(connector, voice),
+    ),
     ChangeNotifierProvider.value(value: connector),
     ChangeNotifierProvider.value(value: retry),
     ChangeNotifierProvider.value(value: PathHistoryService(storage)),
@@ -111,6 +124,21 @@ Future<_Env> _connect(WidgetTester tester) async {
       ackDelay: const Duration(hours: 1),
       replyDelay: const Duration(hours: 1),
     );
+    // Services with periodic timers are created on the real clock, so the
+    // fake-async test zone has no pending timers to complain about.
+    final team = TeamService(connector);
+    final watch = WatchFeedService(connector);
+    env.providers.addAll([
+      ChangeNotifierProvider<TeamService>.value(value: team),
+      ChangeNotifierProvider<TakService>.value(value: TakService(team)),
+      ChangeNotifierProvider<WatchFeedService>.value(value: watch),
+      ChangeNotifierProvider<DroneDetectorService>.value(
+        value: DroneDetectorService(connector, watch),
+      ),
+      ChangeNotifierProvider<MediaMeshCoverageService>.value(
+        value: MediaMeshCoverageService(connector),
+      ),
+    ]);
     await connector.connectReview();
     final end = DateTime.now().add(const Duration(seconds: 8));
     while ((connector.contacts.isEmpty || connector.channels.isEmpty) &&
