@@ -376,6 +376,45 @@ jobs:
           path: dist/*
           retention-days: 30
 
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - id: fv
+        shell: bash
+        run: echo "v=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fv.outputs.v }}
+          channel: "stable"
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - name: Build (unsigned)
+        run: |
+          set -euo pipefail
+          upstream=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
+          build=$((1000 + GITHUB_RUN_NUMBER))
+          flutter build ios --release --no-pub --no-codesign --build-name="$upstream" --build-number=$build \
+            --dart-define=APP_VERSION="${upstream}-tak" --dart-define=APP_BUILD=$build \
+            --dart-define=APP_BUILD_DATE="$(date -u '+%d %b %Y')" --dart-define=APP_COMMIT="${GITHUB_SHA::7}"
+          mkdir -p Payload dist && cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry dist/meshcore-open-tak-ios.ipa Payload
+      # App Store Connect rejects a framework whose MinimumOSVersion is below its binary's (ITMS-90208).
+      - name: Check framework minimum iOS versions
+        run: |
+          for fw in build/ios/iphoneos/Runner.app/Frameworks/*.framework; do
+            declared=$(plutil -extract MinimumOSVersion raw "$fw/Info.plist")
+            built=$(vtool -show-build "$fw/$(plutil -extract CFBundleExecutable raw "$fw/Info.plist")" | awk '/minos/ {print $2; exit}')
+            [ "$(printf '%s\n' "$built" "$declared" | sort -V | tail -1)" = "$declared" ] ||
+              { echo "::error::$(basename "$fw"): MinimumOSVersion $declared is below its binary's minimum iOS $built"; exit 1; }
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          path: dist/*
+          retention-days: 30
+
   linux:
     # 22.04 so the AppImage runs on older distributions too (glibc 2.35).
     runs-on: ubuntu-22.04
@@ -511,7 +550,7 @@ jobs:
 
   publish:
     if: always() && github.ref == 'refs/heads/main' && needs.android.result == 'success' && needs.smoke.result == 'success' && needs.model-links.result == 'success'
-    needs: [android, smoke, windows, macos, linux, model-links]
+    needs: [android, smoke, windows, macos, ios, linux, model-links]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -528,7 +567,7 @@ jobs:
           set -e
           mkdir -p dist
           cp artifacts/meshcore-open-tak-apk/app-release.apk dist/meshcore-open-tak.apk
-          for d in artifacts/desktop-*; do [ -d "$d" ] && cp "$d"/* dist/; done
+          for d in artifacts/desktop-* artifacts/ios; do [ -d "$d" ] && cp "$d"/* dist/; done
           ls -la dist
           build=$((1000 + GITHUB_RUN_NUMBER))
           version="$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)-tak"
@@ -546,6 +585,7 @@ jobs:
             have meshcore-open-tak-windows-setup.exe && echo "| Windows (x64) | **meshcore-open-tak-windows-setup.exe** (installer), or the .zip to run without installing |"
             have meshcore-open-tak-macos.dmg && echo "| macOS 14+ | **meshcore-open-tak-macos.dmg**: drag to Applications |"
             have meshcore-open-tak-linux-x86_64.AppImage && echo "| Linux (x86_64) | **meshcore-open-tak-linux-x86_64.AppImage** (chmod +x and run), or the .tar.gz |"
+            have meshcore-open-tak-ios.ipa && echo "| iOS 16.4+ | **meshcore-open-tak-ios.ipa**, unsigned, for AltStore, SideStore or Sideloadly. For updates, add the AltStore or SideStore source https://github.com/${GITHUB_REPOSITORY}/releases/download/latest-build/meshcore-open-tak-ios.json |"
             echo
             echo "The desktop builds are unsigned: on Windows choose *More info → Run anyway*; on macOS right-click the app → *Open* the first time."
             echo "Once installed, the app offers later builds itself (Settings → App updates)."
@@ -555,7 +595,7 @@ jobs:
           } > notes.md
           # version.json: what the app's update check reads (AppUpdateService).
           BUILD="$build" VERSION="$version" python3 - <<'PY'
-          import hashlib, json, os, subprocess
+          import datetime, hashlib, json, os, subprocess
           def asset(name):
               path = os.path.join("dist", name)
               if not os.path.exists(path):
@@ -582,6 +622,18 @@ jobs:
               "changes": [l for l in log if l.strip()],
               "assets": assets,
           }, open("dist/version.json", "w"), indent=2)
+          # An AltStore/SideStore source, so sideloaded installs get updates.
+          ipa = asset("meshcore-open-tak-ios.ipa")
+          if ipa:
+              repo = os.environ["GITHUB_REPOSITORY"]
+              json.dump({"name": "MeshCore Open TAK", "identifier": f"io.github.{repo.replace('/', '.')}", "apps": [{
+                  "name": "MeshCore Open TAK", "bundleIdentifier": "com.monitormx.meshcoreopen", "developerName": repo.split("/")[0],
+                  "localizedDescription": "MeshCore Open with voice messages, team coordination and more.",
+                  "iconURL": f"https://raw.githubusercontent.com/{repo}/main/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+                  "versions": [{"version": os.environ["VERSION"].removesuffix("-tak"), "buildVersion": os.environ["BUILD"],
+                                "date": datetime.date.today().isoformat(), "size": ipa["size"],
+                                "downloadURL": f"https://github.com/{repo}/releases/download/latest-build/{ipa['name']}"}],
+              }]}, open("dist/meshcore-open-tak-ios.json", "w"), indent=2)
           PY
           cat dist/version.json
           # Move the tag to this commit, then create or update the release.
@@ -596,12 +648,13 @@ jobs:
           # nothing on the release is older than its title says.
           for old in meshcore-open-tak-windows-setup.exe meshcore-open-tak-windows-x64.zip \
                      meshcore-open-tak-macos.dmg meshcore-open-tak-linux-x86_64.AppImage \
-                     meshcore-open-tak-linux-x86_64.tar.gz; do
+                     meshcore-open-tak-linux-x86_64.tar.gz meshcore-open-tak-ios.ipa meshcore-open-tak-ios.json; do
             [ -f "dist/$old" ] || gh release delete-asset latest-build "$old" -y 2>/dev/null || true
           done
           # version.json goes first and comes back last: the app's update check
           # reads it, so it must never pair one build's hashes with another
-          # build's files ("checksum mismatch" mid-publish).
+          # build's files ("checksum mismatch" mid-publish). The iOS source
+          # sorts after the .ipa, so it uploads after it.
           gh release delete-asset latest-build version.json -y 2>/dev/null || true
           for f in dist/*; do
             [ "$(basename "$f")" = version.json ] || gh release upload latest-build "$f" --clobber
