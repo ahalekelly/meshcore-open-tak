@@ -8,7 +8,8 @@
 // so the Pins list can show every pin, whoever put it down.
 
 import '../connector/meshcore_connector.dart';
-import '../screens/map_screen.dart' show buildSharedMarkerKey, parseMarkerText;
+import '../helpers/marker_message.dart' show parseMarkerText;
+import '../screens/map_screen.dart' show buildSharedMarkerKey;
 
 /// A pin someone shared in a chat or channel; the newest position of each.
 class ChatPin {

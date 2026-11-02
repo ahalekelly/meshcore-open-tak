@@ -8,6 +8,7 @@ import '../team/team_screen.dart';
 import '../team/team_service.dart';
 import '../team/watch_feed.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/theme_icons.dart';
 
 class QuickSwitchBar extends StatelessWidget {
   final int selectedIndex;
@@ -30,6 +31,10 @@ class QuickSwitchBar extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final labelStyle = theme.textTheme.labelMedium ?? const TextStyle();
+    // Custom themes style the bar on map screens like everywhere else; only
+    // the stock theme uses the fixed high-contrast map palette.
+    final highContrast =
+        this.highContrast && !MeshMapTheme.of(context).followsTheme;
     final background = highContrast ? MapPalette.panelDark : Colors.transparent;
     // The selected icon sits on the primary indicator pill, so it uses
     // onPrimary. The label sits below on the bar background, so it must use a
@@ -82,7 +87,16 @@ class QuickSwitchBar extends StatelessWidget {
                 }),
               ),
               child: NavigationBar(
-                height: 60,
+                // Picture icons are drawn larger than plain ones; give them
+                // room above the labels.
+                height:
+                    MeshIconTheme.of(context).hasPictureFor(const [
+                      ThemeIconSlot.contacts,
+                      ThemeIconSlot.channels,
+                      ThemeIconSlot.map,
+                    ])
+                    ? 76
+                    : 60,
                 selectedIndex: selectedIndex,
                 onDestinationSelected: (i) {
                   // Tactical opens as its own screen rather than a tab.
@@ -101,12 +115,12 @@ class QuickSwitchBar extends StatelessWidget {
                   NavigationDestination(
                     icon: _buildIconWithBadge(
                       context,
-                      const Icon(Icons.people_outline),
+                      const ThemedIcon(ThemeIconSlot.contacts),
                       contactsUnreadCount,
                     ),
                     selectedIcon: _buildIconWithBadge(
                       context,
-                      const Icon(Icons.people),
+                      const ThemedIcon(ThemeIconSlot.contacts, selected: true),
                       contactsUnreadCount,
                     ),
                     label: context.l10n.nav_contacts,
@@ -114,19 +128,22 @@ class QuickSwitchBar extends StatelessWidget {
                   NavigationDestination(
                     icon: _buildIconWithBadge(
                       context,
-                      const Icon(Icons.tag),
+                      const ThemedIcon(ThemeIconSlot.channels),
                       channelsUnreadCount,
                     ),
                     selectedIcon: _buildIconWithBadge(
                       context,
-                      const Icon(Icons.tag),
+                      const ThemedIcon(ThemeIconSlot.channels, selected: true),
                       channelsUnreadCount,
                     ),
                     label: context.l10n.nav_channels,
                   ),
                   NavigationDestination(
-                    icon: const Icon(Icons.map_outlined),
-                    selectedIcon: const Icon(Icons.map),
+                    icon: const ThemedIcon(ThemeIconSlot.map),
+                    selectedIcon: const ThemedIcon(
+                      ThemeIconSlot.map,
+                      selected: true,
+                    ),
                     label: context.l10n.nav_map,
                   ),
                   NavigationDestination(
@@ -142,7 +159,7 @@ class QuickSwitchBar extends StatelessWidget {
     );
   }
 
-  Widget _buildIconWithBadge(BuildContext context, Icon icon, int count) {
+  Widget _buildIconWithBadge(BuildContext context, Widget icon, int count) {
     if (count <= 0) return icon;
     final label = count > 99 ? '99+' : '$count';
     return Badge(label: Text(label), child: icon);

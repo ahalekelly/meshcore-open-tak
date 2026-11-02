@@ -131,9 +131,7 @@ class RepeaterHubScreen extends StatelessWidget {
                       label: isAdmin
                           ? l10n.repeater_roleAdmin
                           : l10n.repeater_roleGuest,
-                      color: isAdmin
-                          ? MeshPalette.blue
-                          : scheme.onSurfaceVariant,
+                      color: isAdmin ? scheme.primary : scheme.onSurfaceVariant,
                     ),
                   ],
                 ),
