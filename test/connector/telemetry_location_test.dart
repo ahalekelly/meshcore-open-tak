@@ -65,7 +65,10 @@ class _RadioConnector extends MeshCoreConnector {
   bool get isConnected => true;
 
   @override
-  Future<PathSelection> preparePathForContactSend(Contact contact) async {
+  Future<PathSelection> preparePathForContactSend(
+    Contact contact, {
+    PathSelection? explicitSelection,
+  }) async {
     handleFrameForTest(_sentFrame(111)); // a background retry's ack
     return const PathSelection(pathBytes: [], hopCount: -1, useFlood: true);
   }
