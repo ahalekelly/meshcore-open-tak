@@ -83,8 +83,14 @@ void main() {
 
     test('rejects bad secrets and other links', () {
       expect(channelShareLink('a', 'abcd'), isNull);
-      expect(parseChannelQr('meshcore://channel/add?name=a&secret=abcd'), isNull);
-      expect(parseChannelQr('meshcore://contact/add?public_key=$secret'), isNull);
+      expect(
+        parseChannelQr('meshcore://channel/add?name=a&secret=abcd'),
+        isNull,
+      );
+      expect(
+        parseChannelQr('meshcore://contact/add?public_key=$secret'),
+        isNull,
+      );
       expect(parseChannelQr('https://example.com'), isNull);
       expect(parseChannelQr(''), isNull);
     });

@@ -3039,7 +3039,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get publicMedia_title => 'Photos and voice on Public';
 
   @override
-  String get publicMedia_subtitle => 'Photos, voice messages and push-to-talk on Public and #public. Everyone on the mesh shares these channels, so this is off by default.';
+  String get publicMedia_subtitle =>
+      'Photos, voice messages and push-to-talk on Public and #public. Everyone on the mesh shares these channels, so this is off by default.';
 
   @override
   String get publicMedia_warning => 'Only switch this on in an emergency.';
@@ -3048,16 +3049,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get publicMedia_offTitle => 'Photos and voice are off here';
 
   @override
-  String get publicMedia_offBody => 'Everyone on the mesh shares Public and #public, so photos, voice messages and push-to-talk are off on them. Please use another channel.';
+  String get publicMedia_offBody =>
+      'Everyone on the mesh shares Public and #public, so photos, voice messages and push-to-talk are off on them. Please use another channel.';
 
   @override
   String get publicMedia_offTooltip => 'Photos and voice are off on Public';
 
   @override
-  String get publicMedia_turnedOn => 'Photos and voice are on for Public and #public. Switch them off when the emergency is over.';
+  String get publicMedia_turnedOn =>
+      'Photos and voice are on for Public and #public. Switch them off when the emergency is over.';
 
   @override
-  String get publicMedia_turnedOff => 'Photos and voice are off on Public and #public';
+  String get publicMedia_turnedOff =>
+      'Photos and voice are off on Public and #public';
 
   @override
   String get repeater_management => '리피터 관리';
@@ -6687,22 +6691,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get networkMap_unnamed => '이름 없는 리피터';
 
   @override
-  String get holidayGreeting_halloween =>
-      '해피 할로윈|즐거운 할로윈|행복한 할로윈|할로윈 축하해|할로윈 잘 보내세요|트릭 오어 트릿|해피 할로윈데이';
-
-  @override
-  String get holidayGreeting_thanksgiving =>
-      '해피 땡스기빙|즐거운 추수감사절|행복한 추수감사절|추수감사절 잘 보내세요|추수감사절 축하해요|해피 땡스기빙데이';
-
-  @override
-  String get holidayGreeting_christmas =>
-      '메리 크리스마스|즐거운 성탄절|즐거운 크리스마스|행복한 성탄절|성탄 축하드립니다|메리 크리스마스 되세요|해피 크리스마스|메리 크리스마스 이브';
-
-  @override
-  String get holidayGreeting_newYear =>
-      '새해 복 많이 받으세요|새해 복 많이 받아|새해 복 많이 받으십시오|새해 복 많이 받아요|해피 뉴 이어|해피 뉴이어|즐거운 새해|행복한 새해';
-
-  @override
   String get mediaMesh_title => 'MediaMesh Settings';
 
   @override
@@ -8469,4 +8457,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get reach_now => 'just now';
+
+  @override
+  String get holidayGreeting_halloween =>
+      '해피 할로윈|즐거운 할로윈|행복한 할로윈|할로윈 축하해|할로윈 잘 보내세요|트릭 오어 트릿|해피 할로윈데이';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      '해피 땡스기빙|즐거운 추수감사절|행복한 추수감사절|추수감사절 잘 보내세요|추수감사절 축하해요|해피 땡스기빙데이';
+
+  @override
+  String get holidayGreeting_christmas =>
+      '메리 크리스마스|즐거운 성탄절|즐거운 크리스마스|행복한 성탄절|성탄 축하드립니다|메리 크리스마스 되세요|해피 크리스마스|메리 크리스마스 이브';
+
+  @override
+  String get holidayGreeting_newYear =>
+      '새해 복 많이 받으세요|새해 복 많이 받아|새해 복 많이 받으십시오|새해 복 많이 받아요|해피 뉴 이어|해피 뉴이어|즐거운 새해|행복한 새해';
 }

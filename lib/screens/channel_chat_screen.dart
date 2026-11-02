@@ -893,10 +893,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         _holidayWatcher.onNewest(
                           context,
                           id: newest?.messageId,
-                          texts: [
-                            newest?.displayText,
-                            newest?.translatedText,
-                          ],
+                          texts: [newest?.displayText, newest?.translatedText],
                           receivedAt: newest?.receivedAt,
                           originOf: () => newestMessageOrigin(
                             _messageAreaKey,
@@ -921,8 +918,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           );
                         }
 
-                        final urlImagesEnabled = connector
-                            .showChannelUrlImages(widget.channel.index);
+                        final urlImagesEnabled = connector.showChannelUrlImages(
+                          widget.channel.index,
+                        );
                         final rowCount = layout.length;
                         final itemCount = rowCount + (_isLoadingOlder ? 1 : 0);
 
@@ -981,9 +979,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       row.id == _highlightMessageId;
                                   return AnimatedContainer(
                                     key: messageKey,
-                                    duration: const Duration(
-                                      milliseconds: 300,
-                                    ),
+                                    duration: const Duration(milliseconds: 300),
                                     decoration: BoxDecoration(
                                       color: highlighted
                                           ? Theme.of(context)

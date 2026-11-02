@@ -3159,7 +3159,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get publicMedia_title => 'Photos and voice on Public';
 
   @override
-  String get publicMedia_subtitle => 'Photos, voice messages and push-to-talk on Public and #public. Everyone on the mesh shares these channels, so this is off by default.';
+  String get publicMedia_subtitle =>
+      'Photos, voice messages and push-to-talk on Public and #public. Everyone on the mesh shares these channels, so this is off by default.';
 
   @override
   String get publicMedia_warning => 'Only switch this on in an emergency.';
@@ -3168,16 +3169,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get publicMedia_offTitle => 'Photos and voice are off here';
 
   @override
-  String get publicMedia_offBody => 'Everyone on the mesh shares Public and #public, so photos, voice messages and push-to-talk are off on them. Please use another channel.';
+  String get publicMedia_offBody =>
+      'Everyone on the mesh shares Public and #public, so photos, voice messages and push-to-talk are off on them. Please use another channel.';
 
   @override
   String get publicMedia_offTooltip => 'Photos and voice are off on Public';
 
   @override
-  String get publicMedia_turnedOn => 'Photos and voice are on for Public and #public. Switch them off when the emergency is over.';
+  String get publicMedia_turnedOn =>
+      'Photos and voice are on for Public and #public. Switch them off when the emergency is over.';
 
   @override
-  String get publicMedia_turnedOff => 'Photos and voice are off on Public and #public';
+  String get publicMedia_turnedOff =>
+      'Photos and voice are off on Public and #public';
 
   @override
   String get repeater_management => 'Gerenciamento de Repetidor';
@@ -6986,22 +6990,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get networkMap_unnamed => 'Repetidor sem nome';
 
   @override
-  String get holidayGreeting_halloween =>
-      'Feliz Halloween|Feliz Dia das Bruxas|Feliz Dia de Halloween|Doce ou travessura';
-
-  @override
-  String get holidayGreeting_thanksgiving =>
-      'Feliz Dia de Ação de Graças|Feliz Thanksgiving|Feliz Ação de Graças|Feliz Dia de Graças';
-
-  @override
-  String get holidayGreeting_christmas =>
-      'Feliz Natal|Boas Festas|Boas Festas de Natal|Feliz Natal e Boas Festas|Merry Christmas';
-
-  @override
-  String get holidayGreeting_newYear =>
-      'Feliz Ano Novo|Próspero Ano Novo|Feliz Ano|Feliz Réveillon|Boas Festas e Feliz Ano Novo|Happy New Year';
-
-  @override
   String get mediaMesh_title => 'MediaMesh Settings';
 
   @override
@@ -8768,4 +8756,20 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get reach_now => 'just now';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Feliz Halloween|Feliz Dia das Bruxas|Feliz Dia de Halloween|Doce ou travessura';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Feliz Dia de Ação de Graças|Feliz Thanksgiving|Feliz Ação de Graças|Feliz Dia de Graças';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Feliz Natal|Boas Festas|Boas Festas de Natal|Feliz Natal e Boas Festas|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Feliz Ano Novo|Próspero Ano Novo|Feliz Ano|Feliz Réveillon|Boas Festas e Feliz Ano Novo|Happy New Year';
 }

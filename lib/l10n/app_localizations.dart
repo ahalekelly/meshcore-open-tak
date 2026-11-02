@@ -11743,30 +11743,6 @@ abstract class AppLocalizations {
   /// **'Unnamed repeater'**
   String get networkMap_unnamed;
 
-  /// Holiday greeting that plays the Halloween bats animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
-  ///
-  /// In en, this message translates to:
-  /// **'Happy Halloween'**
-  String get holidayGreeting_halloween;
-
-  /// Holiday greeting that plays the Thanksgiving turkey animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
-  ///
-  /// In en, this message translates to:
-  /// **'Happy Thanksgiving'**
-  String get holidayGreeting_thanksgiving;
-
-  /// Holiday greeting that plays the Christmas Santa animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
-  ///
-  /// In en, this message translates to:
-  /// **'Merry Christmas|Merry Xmas|Happy Christmas'**
-  String get holidayGreeting_christmas;
-
-  /// Holiday greeting that plays the New Year's fireworks animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
-  ///
-  /// In en, this message translates to:
-  /// **'Happy New Year|Happy New Year\'s'**
-  String get holidayGreeting_newYear;
-
   /// No description provided for @mediaMesh_title.
   ///
   /// In en, this message translates to:
@@ -14760,6 +14736,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'just now'**
   String get reach_now;
+
+  /// Holiday greeting that plays the Halloween bats animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Halloween'**
+  String get holidayGreeting_halloween;
+
+  /// Holiday greeting that plays the Thanksgiving turkey animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Thanksgiving'**
+  String get holidayGreeting_thanksgiving;
+
+  /// Holiday greeting that plays the Christmas Santa animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Merry Christmas|Merry Xmas|Happy Christmas'**
+  String get holidayGreeting_christmas;
+
+  /// Holiday greeting that plays the New Year's fireworks animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy New Year|Happy New Year\'s'**
+  String get holidayGreeting_newYear;
 }
 
 class _AppLocalizationsDelegate

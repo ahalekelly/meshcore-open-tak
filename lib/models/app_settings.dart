@@ -150,6 +150,7 @@ class AppSettings {
 
   /// Night vision: everything shown in dim red (Settings > App settings).
   final bool redLight;
+
   /// Themes the user made. Built-in presets live in [CustomTheme.presets].
   final List<CustomTheme> customThemes;
 
