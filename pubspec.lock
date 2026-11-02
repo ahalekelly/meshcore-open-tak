@@ -436,11 +436,9 @@ packages:
   flserial:
     dependency: "direct main"
     description:
-      path: "."
-      ref: e1864de9b65cda9656dba804329bdd2890dd5a92
-      resolved-ref: e1864de9b65cda9656dba804329bdd2890dd5a92
-      url: "https://github.com/MeshEnvy/flserial.git"
-    source: git
+      path: "third_party/flserial"
+      relative: true
+    source: path
     version: "0.3.5"
   flutter:
     dependency: "direct main"
