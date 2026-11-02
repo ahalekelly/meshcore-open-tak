@@ -29,19 +29,20 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 16. [Troubleshooting](troubleshooting.md) - BLE, USB, browser, and firmware issues
 17. [Review Mode](review-mode.md) - Simulated radio and reviewer instructions for Google Play and App Store review
 18. [Network Map](network-map.md) - Online repeater map, adding and managing repeaters from it, opt-in uploads, and hiding a repeater
-19. [ATAK Plugin](atak-plugin.md) - Sharing the radio with the MeshCore ATAK plugin, and items shared from ATAK
-20. [MediaMesh](media-mesh.md) - Photos and voice on a second frequency (`radio2`) of the same radio
-21. [Walkie-talkie](walkie-talkie.md) - Push-to-talk on a channel over MediaMesh, heard as it's spoken and kept as a voice message
-22. [Update a repeater over LoRa](lora-ota-repeater-tutorial.md) - LoRa OTA from the phone (Repeater Management > LoRa OTA), plus ESP32 Wi-Fi and nRF52 Bluetooth updates for nearby repeaters
-23. [Update a Companion](companion-update-tutorial.md) - Settings > Update Companion: nRF52 Bluetooth DFU or ESP32 Wi-Fi OTA
-24. [Drone detector](drone-detector.md) - Remote ID drones heard by the phone's Bluetooth, on the map and posted to a channel
-25. [MeshCore TEAM](meshcore-team.md) - Seeing MeshCore TEAM users on the team channel, and being seen by them
-26. [Sharing a team in one scan](team-setup.md) - One QR code (or Sound link) with the team channel, watched channels and MediaMesh profile
-27. [Quick replies](quick-replies.md) - One-tap answers to teammates' alerts, reports and pins, and to watched reports
-28. [Who got it](message-reach.md) - Tap a sent channel message to see the repeaters that re-sent it and the teammates who heard it, on a map
-29. [Photos on the map](photo-mosaic.md) - Photos received over MediaMesh as thumbnails where they were taken, with a timeline (a toggle)
-30. [AR view](ar-view.md) - Hold the phone up to see teammates, pins and watched reports as labels with their distance
-31. [Transit cards](transit-watch.md) - A watched transit bot channel (BusBot's #transit) as full cards: ticking arrivals, alerts, trip plans, stops on the map
+19. [Themes](themes.md) - Color themes, custom icons and map markers, chat backgrounds, automatic holiday themes, and holiday message animations
+20. [ATAK Plugin](atak-plugin.md) - Sharing the radio with the MeshCore ATAK plugin, and items shared from ATAK
+21. [MediaMesh](media-mesh.md) - Photos and voice on a second frequency (`radio2`) of the same radio
+22. [Walkie-talkie](walkie-talkie.md) - Push-to-talk on a channel over MediaMesh, heard as it's spoken and kept as a voice message
+23. [Update a repeater over LoRa](lora-ota-repeater-tutorial.md) - LoRa OTA from the phone (Repeater Management > LoRa OTA), plus ESP32 Wi-Fi and nRF52 Bluetooth updates for nearby repeaters
+24. [Update a Companion](companion-update-tutorial.md) - Settings > Update Companion: nRF52 Bluetooth DFU or ESP32 Wi-Fi OTA
+25. [Drone detector](drone-detector.md) - Remote ID drones heard by the phone's Bluetooth, on the map and posted to a channel
+26. [MeshCore TEAM](meshcore-team.md) - Seeing MeshCore TEAM users on the team channel, and being seen by them
+27. [Sharing a team in one scan](team-setup.md) - One QR code (or Sound link) with the team channel, watched channels and MediaMesh profile
+28. [Quick replies](quick-replies.md) - One-tap answers to teammates' alerts, reports and pins, and to watched reports
+29. [Who got it](message-reach.md) - Tap a sent channel message to see the repeaters that re-sent it and the teammates who heard it, on a map
+30. [Photos on the map](photo-mosaic.md) - Photos received over MediaMesh as thumbnails where they were taken, with a timeline (a toggle)
+31. [AR view](ar-view.md) - Hold the phone up to see teammates, pins and watched reports as labels with their distance
+32. [Transit cards](transit-watch.md) - A watched transit bot channel (BusBot's #transit) as full cards: ticking arrivals, alerts, trip plans, stops on the map
 
 ## App Overview
 
@@ -67,7 +68,7 @@ MeshCore Open connects to MeshCore LoRa mesh radios over BLE, USB, or TCP. Once 
 | Mesh image encoding/reconstruction | Local after model installation |
 | On-device translation | Local after model installation |
 | Model downloads | Internet required |
-| GIF search/display and URL image previews | Internet required to retrieve content |
+| GIF search/display, URL image previews, and IPFS image/file uploads | Internet required to upload or retrieve content |
 | Map display | Cached tiles work offline; uncached tiles need internet |
 | Online network map and opt-in uploads | Internet required |
 | Terrain LOS analysis | Elevation lookup needs internet unless the required data is already cached |

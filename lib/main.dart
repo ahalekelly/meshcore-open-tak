@@ -20,6 +20,7 @@ import 'services/media_lockdown.dart';
 import 'utils/platform_info.dart';
 
 import 'connector/meshcore_connector.dart';
+import 'helpers/message_url_image_helper.dart';
 import 'models/image_codec_support.dart';
 import 'screens/scanner_screen.dart';
 import 'services/image_chunk_transport.dart';
@@ -42,6 +43,7 @@ import 'services/translation_service.dart';
 import 'services/model_auto_download.dart';
 import 'models/translation_support.dart';
 import 'services/ui_view_state_service.dart';
+import 'services/chat_background_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'storage/prefs_manager.dart';
 import 'theme/mesh_theme.dart';
@@ -117,11 +119,16 @@ void main() async {
     'appSettingsService.loadSettings',
     () => appSettingsService.loadSettings(),
   );
+  // Re-check the automatic holiday theme when the date changes.
+  appSettingsService.startDateWatch();
   // Undo a review-mode session the app was killed in before it could exit.
   await _startupStep(
     'endReviewModeSession',
     () => endReviewModeSession(appSettingsService),
   );
+  final chatBackgroundService = ChatBackgroundService(appSettingsService);
+  // Drop pictures left behind by removed backgrounds or abandoned edits.
+  unawaited(chatBackgroundService.collectGarbage());
   await _startupStep(
     'mediaMeshNearby.load',
     () => MediaMeshNearby.instance.load(),
@@ -185,6 +192,18 @@ void main() async {
 
   // Initialize notification service
   final notificationService = NotificationService();
+  notificationService.setPublicIpfsGateway(
+    appSettingsService.settings.publicIpfsGateway,
+  );
+  MessageUrlImageHelper.loadLinkImages.value =
+      appSettingsService.settings.loadLinkImages;
+  appSettingsService.addListener(() {
+    notificationService.setPublicIpfsGateway(
+      appSettingsService.settings.publicIpfsGateway,
+    );
+    MessageUrlImageHelper.loadLinkImages.value =
+        appSettingsService.settings.loadLinkImages;
+  });
   await _startupStep(
     'notificationService.initialize',
     () => notificationService.initialize(),
@@ -283,6 +302,7 @@ void main() async {
       imageReassembler: imageReassembler,
       voxVoiceService: voxVoiceService,
       networkMapUploadService: networkMapUploadService,
+      chatBackgroundService: chatBackgroundService,
     ),
   );
   _reportStartupStalls();
@@ -445,6 +465,7 @@ class MeshCoreApp extends StatefulWidget {
   final ImageStreamReassembler imageReassembler;
   final VoxVoiceService? voxVoiceService;
   final NetworkMapUploadService networkMapUploadService;
+  final ChatBackgroundService chatBackgroundService;
 
   const MeshCoreApp({
     super.key,
@@ -465,6 +486,7 @@ class MeshCoreApp extends StatefulWidget {
     required this.imageReassembler,
     this.voxVoiceService,
     required this.networkMapUploadService,
+    required this.chatBackgroundService,
   });
 
   @override
@@ -611,6 +633,15 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         state == AppLifecycleState.hidden) {
       unawaited(widget.imageCodecService.handleMemoryPressure());
     }
+    // Batched message/contact writes must land before the OS can suspend or
+    // kill a backgrounded app.
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      unawaited(widget.connector.flushPendingWrites());
+      unawaited(widget.pathHistoryService.flushPendingWrites());
+    }
     if (state == AppLifecycleState.resumed) {
       widget.connector.syncAppBadge();
     }
@@ -654,9 +685,14 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ),
         Provider<AtakPluginBridge>.value(value: _atakBridge),
         ChangeNotifierProvider.value(value: widget.networkMapUploadService),
+        ChangeNotifierProvider.value(value: widget.chatBackgroundService),
       ],
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {
+          // Red light keeps the stock dark theme under its red filter.
+          final customTheme = settingsService.settings.redLight
+              ? null
+              : settingsService.activeCustomTheme;
           return MaterialApp(
             title: 'MeshCore Open TAK',
             navigatorKey: appNavigatorKey,
@@ -671,11 +707,17 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
             locale: _localeFromSetting(
               settingsService.settings.languageOverride,
             ),
-            theme: MeshTheme.light(),
-            darkTheme: MeshTheme.dark(),
+            theme: customTheme != null
+                ? MeshTheme.fromCustom(customTheme)
+                : MeshTheme.light(),
+            darkTheme: customTheme != null
+                ? MeshTheme.fromCustom(customTheme)
+                : MeshTheme.dark(),
             // Red light: the dark theme, under the red filter below.
             themeMode: settingsService.settings.redLight
                 ? ThemeMode.dark
+                : customTheme != null
+                ? (customTheme.isDark ? ThemeMode.dark : ThemeMode.light)
                 : _themeModeFromSetting(settingsService.settings.themeMode),
             builder: (context, child) {
               // Update notification service with resolved locale
