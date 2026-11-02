@@ -1148,8 +1148,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // identity (color, sender-name visibility, status ticks, swipe-to-reply
     // eligibility) stays keyed to isOutgoing. See _MessageBubble in
     // chat_screen.dart for the DM-side twin of this.
-    final otpActive = context.select<MeshCoreConnector, bool>(
-      (connector) => connector.isChannelOtpEnabled(widget.channel.index),
+    // Called from a Builder inside the transcript's Consumer<MeshCoreConnector>
+    // (which already rebuilds on connector changes), so this reads instead of
+    // selecting: select is only allowed in the calling widget's own build.
+    final otpActive = context.read<MeshCoreConnector>().isChannelOtpEnabled(
+      widget.channel.index,
     );
     final layoutOutgoing = otpActive ? !isOutgoing : isOutgoing;
     final scheme = Theme.of(context).colorScheme;
@@ -2308,8 +2311,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final scheme = Theme.of(context).colorScheme;
     final isOutgoing = entry.isOutgoing;
     // Same OTP-mode side-mirroring as _buildMessageBubble above.
-    final otpActive = context.select<MeshCoreConnector, bool>(
-      (connector) => connector.isChannelOtpEnabled(widget.channel.index),
+    // Called from a Builder inside the transcript's Consumer<MeshCoreConnector>
+    // (which already rebuilds on connector changes), so this reads instead of
+    // selecting: select is only allowed in the calling widget's own build.
+    final otpActive = context.read<MeshCoreConnector>().isChannelOtpEnabled(
+      widget.channel.index,
     );
     final layoutOutgoing = otpActive ? !isOutgoing : isOutgoing;
     // Same OTP-theme recoloring as _buildMessageBubble above. An AEIC
