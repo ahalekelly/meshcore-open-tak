@@ -16,6 +16,7 @@ import '../services/map_tile_cache_service.dart';
 import '../services/notification_service.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
+import '../widgets/public_media_switch.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/cyr2lat_profile_dialog.dart';
 import '../widgets/language_picker_sheet.dart';
@@ -387,6 +388,11 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     return Column(
       children: [
+        // Photos and voice on Public and #public: off unless an emergency.
+        const PublicMediaSwitch(
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        ),
+        const Divider(height: 1, indent: 16),
         SwitchListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
