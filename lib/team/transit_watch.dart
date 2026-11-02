@@ -342,15 +342,15 @@ final _arrivalRe = RegExp(
 );
 final _timeOnlyRe = RegExp('^($_timeAlt)(\\s+🕒|\\s+\\(s\\))?\$');
 final _geoRe = RegExp(
-  r'^(?:📍\s+)?(-?\d{1,2}\.\d{3,}),(-?\d{1,3}\.\d{3,})\s+·\s+((?:[a-z]{2,4}\s+)?[A-Za-z0-9-]+)$',
+  r'^(?:📍\s+)?(-?\d{1,2}\.\d{3,}),(-?\d{1,3}\.\d{3,})\s+·\s+((?:[a-z]{2,4}\s+)?[\w.-]+)$',
 );
 final _rideRe = RegExp(
-  '^($_modeAlt)\\s+(.+?)\\s+(\\d{1,2}:\\d{2})(?:\\s+((?:[a-z]{2,4}\\s+)?\\d[\\w-]*))?'
+  '^($_modeAlt)\\s+(.+?)\\s+(\\d{1,2}:\\d{2})(?:\\s+((?:[a-z]{2,4}\\s+)?[A-Za-z0-9][\\w.-]*))?'
   '\\s+→\\s+(.+?)\\s+(\\d{1,2}:\\d{2})\$',
 );
 final _walkRe = RegExp(r'^🚶\s+(\d+)\s+min\s+to\s+(.+)$');
 final _hitRe = RegExp(
-  r'^🚏\s+((?:[a-z]{2,4}\s+)?[A-Za-z0-9-]+)\s+(.+?)(?:\s+·\s+([\d.]+\s+(?:ft|mi)))?\s+→\s+(.+)$',
+  r'^🚏\s+((?:[a-z]{2,4}\s+)?[\w.-]*\d[\w.-]*|(?:[a-z]{2,4}\s+)[\w.-]+)\s+(.+?)(?:\s+·\s+([\d.]+\s+(?:ft|mi)))?\s+→\s+(.+)$',
 );
 
 TransitArrival _arrival(String? emoji, String route, String time, String? s) {

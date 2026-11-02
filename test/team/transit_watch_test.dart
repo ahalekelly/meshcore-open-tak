@@ -98,6 +98,19 @@ void main() {
     );
   });
 
+  test('stop numbers with letters and underscores (Sound Transit)', () {
+    final r = parseTransit(
+      '🚏 Everett Station · ST\n🚆 N Line - 12 mins\n'
+      '📍 47.97500,-122.19700 · st S_EV',
+    )!;
+    expect(r.stopRef, 'st S_EV');
+    expect(r.hasPosition, isTrue);
+    final s = parseTransit(
+      '🔎 everett station:\n🚏 st S_EV Everett Station → N Line',
+    )!;
+    expect(s.stops.single.ref, 'st S_EV');
+  });
+
   test('a trip plan', () {
     final r = parseTransit(
       '🧭 Arrive 8:25 · 45 min · 1 transfer · timetable\n'
