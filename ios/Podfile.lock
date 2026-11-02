@@ -1,22 +1,32 @@
 PODS:
+  - codec2 (1.2.0)
   - Flutter (1.0.0)
   - flutter_foreground_task (0.0.1):
     - Flutter
+  - ggwave (0.4.2)
 
 DEPENDENCIES:
+  - codec2 (from `../third_party/codec2`)
   - Flutter (from `Flutter`)
   - flutter_foreground_task (from `.symlinks/plugins/flutter_foreground_task/ios`)
+  - ggwave (from `../third_party/ggwave`)
 
 EXTERNAL SOURCES:
+  codec2:
+    :path: "../third_party/codec2"
   Flutter:
     :path: Flutter
   flutter_foreground_task:
     :path: ".symlinks/plugins/flutter_foreground_task/ios"
+  ggwave:
+    :path: "../third_party/ggwave"
 
 SPEC CHECKSUMS:
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  codec2: b18310aae68ec9b60e62d356e9779acdc2725b91
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_foreground_task: a159d2c2173b33699ddb3e6c2a067045d7cebb89
+  ggwave: 14e1ce0b87ab12943c6b84165da95984b06f1fa3
 
-PODFILE CHECKSUM: e42b502c78c33aa1ed9d42eaea8960ce2139504b
+PODFILE CHECKSUM: 48839b84713e0f642967e6e07d7aa0731627c549
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0
