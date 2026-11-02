@@ -245,6 +245,10 @@ String? _agencyOfRef(String? ref) {
   return sp > 0 ? ref.substring(0, sp) : null;
 }
 
+/// "stop 1121" for a number, a stop's name as it is.
+String _stopWords(String s) =>
+    RegExp(r'^([a-z]{2,4} )?[\w.-]*\d[\w.-]*$').hasMatch(s) ? 'stop $s' : s;
+
 String _clock(BuildContext context, DateTime t) =>
     MaterialLocalizations.of(context).formatTimeOfDay(
       TimeOfDay.fromDateTime(t),
@@ -350,7 +354,7 @@ class _LegRow extends StatelessWidget {
             Expanded(
               child: Text(
                 'Walk ${l.walkMinutes ?? '?'} min to '
-                '${l.to == 'destination' ? 'your destination' : 'stop ${l.to}'}',
+                '${l.to == 'destination' ? 'your destination' : _stopWords(l.to)}',
                 style: t.bodyMedium,
               ),
             ),
@@ -378,7 +382,7 @@ class _LegRow extends StatelessWidget {
                 Text(
                   '${l.route ?? ''} '
                   '${dep == null ? l.depart ?? '' : _clock(context, dep)}'
-                  '${l.board == null ? '' : ' from stop ${l.board}'}$leaves',
+                  '${l.board == null ? '' : ' from ${_stopWords(l.board!)}'}$leaves',
                   style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(

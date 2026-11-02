@@ -126,6 +126,20 @@ void main() {
     expect(r.legs.length, 3);
     expect(r.legs[0].route, '11');
     expect(r.legs[0].board, '11040');
+    // plans now name the stops
+    final named = parseTransit(
+      '🧭 Arrive 12:58 · 59 min · timetable\n'
+      '🚋 1 Line 12:04 from Northgate Station → SeaTac/Airport 12:58\n'
+      '🚶 2 min to Westlake Station\n'
+      '📍 47.70266,-122.32832 · st 990005',
+    )!;
+    expect(named.legs[0].route, '1 Line');
+    expect(named.legs[0].depart, '12:04');
+    expect(named.legs[0].board, 'Northgate Station');
+    expect(named.legs[0].to, 'SeaTac/Airport');
+    expect(named.legs[0].arrive, '12:58');
+    expect(named.legs[1].to, 'Westlake Station');
+    expect(named.stopRef, 'st 990005');
     expect(r.legs[0].to, '3rd Ave & Pike St, Bay 2');
     expect(r.legs[1].walk, isTrue);
     expect(r.legs[1].to, '1121');
