@@ -248,19 +248,20 @@ void main() {
         const MethodChannel('plugins.flutter.io/path_provider'),
         (call) async => tempDir.path,
       );
-  // The fork's linked-images-on-Wi-Fi watcher (WifiState) listens to
-  // connectivity_plus, which has no plugin in widget tests.
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-    ..setMockMethodCallHandler(
-      const MethodChannel('dev.fluttercommunity.plus/connectivity'),
-      (call) async => <String>['wifi'],
-    )
-    ..setMockStreamHandler(
-      const EventChannel('dev.fluttercommunity.plus/connectivity_status'),
-      MockStreamHandler.inline(onListen: (arguments, events) {}),
-    );
 
   setUpAll(() async {
+    // The fork's linked-images-on-Wi-Fi watcher (WifiState) listens to
+    // connectivity_plus, which has no plugin in widget tests. (Stream mocks
+    // register a tear-down, so they have to be set up inside a test hook.)
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      ..setMockMethodCallHandler(
+        const MethodChannel('dev.fluttercommunity.plus/connectivity'),
+        (call) async => <String>['wifi'],
+      )
+      ..setMockStreamHandler(
+        const EventChannel('dev.fluttercommunity.plus/connectivity_status'),
+        MockStreamHandler.inline(onListen: (arguments, events) {}),
+      );
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();
     await PrefsManager.initialize();
