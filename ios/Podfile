@@ -26,10 +26,16 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 target 'Runner' do
+  # Frameworks export the C pods' symbols for Dart's DynamicLibrary.process()
+  # lookups; static linking drops them as unreferenced.
+  use_frameworks!
+
   # Codec2 (LGPL-2.1) for MeshCore Open TAK voice messages
   pod 'codec2', :path => '../third_party/codec2'
   # ggwave (MIT): share by sound (lib/sound/ggwave_ffi.dart finds it in the process).
   pod 'ggwave', :path => '../third_party/ggwave'
+  # AV1 still images for photo messages (lib/vox/av1_ffi.dart finds it in the process).
+  pod 'vox_av1', :path => '../third_party/vox_av1'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end

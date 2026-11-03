@@ -1,5 +1,5 @@
-// MeshCore Open TAK - dart:ffi binding for libvox_av1.so (AV1 still images
-// on libaom, see android/app/src/main/cpp/vox_av1.c). Android only.
+// MeshCore Open TAK - dart:ffi binding for vox_av1 (AV1 still images on
+// libaom, see third_party/vox_av1/vox_av1.c).
 
 import 'dart:ffi';
 import 'dart:io';
@@ -81,7 +81,7 @@ class VoxAv1 {
     return _instance;
   }
 
-  // Android: in the APK. macOS: the vox_av1 pod, in the process (a build
+  // Android: in the APK. macOS and iOS: the vox_av1 pod, in the process (a build
   // without libaom has a stub, and the lookup fails). Windows: vox_av1.dll
   // next to the exe; Linux: the bundle's lib/ (.github/workflows/build.yml).
   static DynamicLibrary _open() {

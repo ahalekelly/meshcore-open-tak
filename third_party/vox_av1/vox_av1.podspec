@@ -1,9 +1,8 @@
-# AV1 still images for VOX photo messages on macOS (lib/vox/av1_ffi.dart
-# finds vox_av1_encode/decode in the process). libaom is prebuilt by CI into
-# aom-apple/ (universal arm64 + x86_64; see .github/workflows/build.yml).
-# Without it, a stub builds instead and photos are reported as unavailable.
-aom = File.join(__dir__, 'aom-apple', 'lib', 'libaom.a')
-has_aom = File.exist?(aom)
+# AV1 still images for VOX photo messages on macOS and iOS (lib/vox/av1_ffi.dart
+# finds vox_av1_encode/decode in the process). build-aom-apple.sh builds libaom
+# into aom-apple/. Without it, a stub builds instead and photos are reported as
+# unavailable.
+has_aom = File.exist?(File.join(__dir__, 'aom-apple', 'libaom.xcframework'))
 
 Pod::Spec.new do |s|
   s.name             = 'vox_av1'
@@ -18,7 +17,7 @@ Pod::Spec.new do |s|
   s.compiler_flags   = '-std=gnu11'
   if has_aom
     s.source_files        = 'vox_av1.c'
-    s.vendored_libraries  = 'aom-apple/lib/libaom.a'
+    s.vendored_frameworks = 'aom-apple/libaom.xcframework'
     s.preserve_paths      = 'aom-apple/**/*'
     s.pod_target_xcconfig = {
       'HEADER_SEARCH_PATHS' => '"$(PODS_TARGET_SRCROOT)/aom-apple/include"',

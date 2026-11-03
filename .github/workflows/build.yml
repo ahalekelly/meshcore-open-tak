@@ -307,32 +307,17 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      # Photo messages: libaom as a universal static library (arm64 with its
-      # NEON code, x86_64 in plain C) for the vox_av1 pod (third_party/vox_av1).
-      - name: Cache libaom (macOS)
-        id: aommac
+      # Photo messages: libaom for the vox_av1 pod (third_party/vox_av1).
+      - name: Cache libaom (Apple)
+        id: aom
         uses: actions/cache@v4
         with:
           path: third_party/vox_av1/aom-apple
-          key: aom-apple-v3.12.1-universal-1
-      - name: Build libaom (macOS, universal)
-        if: steps.aommac.outputs.cache-hit != 'true'
+          key: aom-apple-${{ hashFiles('third_party/vox_av1/build-aom-apple.sh') }}
+      - name: Build libaom (Apple)
+        if: steps.aom.outputs.cache-hit != 'true'
         timeout-minutes: 30
-        run: |
-          set -euo pipefail
-          curl -sSL -o /tmp/aom.tgz "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/deps-cache/aom-v3.12.1.tar.gz"
-          echo "76558ad5918820d66fa78460d9957e5bbf7cf9eef1a5421b5ba5e616f200d76e  /tmp/aom.tgz" | shasum -a 256 -c
-          tar xzf /tmp/aom.tgz -C /tmp
-          common="-DCMAKE_BUILD_TYPE=Release -DENABLE_DOCS=0 -DENABLE_EXAMPLES=0 -DENABLE_TESTS=0 -DENABLE_TESTDATA=0 -DENABLE_TOOLS=0 -DCONFIG_AV1_HIGHBITDEPTH=0 -DCONFIG_WEBM_IO=0 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15"
-          cmake -S /tmp/aom -B /tmp/aom-arm64 $common -DCMAKE_OSX_ARCHITECTURES=arm64
-          cmake --build /tmp/aom-arm64 -j"$(sysctl -n hw.ncpu)" --target aom
-          cmake -S /tmp/aom -B /tmp/aom-x86 $common -DCMAKE_OSX_ARCHITECTURES=x86_64 -DAOM_TARGET_CPU=generic
-          cmake --build /tmp/aom-x86 -j"$(sysctl -n hw.ncpu)" --target aom
-          out=third_party/vox_av1/aom-apple
-          mkdir -p $out/lib $out/include/aom
-          lipo -create /tmp/aom-arm64/libaom.a /tmp/aom-x86/libaom.a -output $out/lib/libaom.a
-          lipo -info $out/lib/libaom.a
-          cp /tmp/aom/aom/*.h $out/include/aom/
+        run: third_party/vox_av1/build-aom-apple.sh
       - id: fv   # the Flutter version: pinned in .flutter-version, bumped by the weekly dependency PR
         shell: bash
         run: echo "v=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_OUTPUT"
@@ -381,6 +366,17 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      # Photo messages: libaom for the vox_av1 pod (third_party/vox_av1).
+      - name: Cache libaom (Apple)
+        id: aom
+        uses: actions/cache@v4
+        with:
+          path: third_party/vox_av1/aom-apple
+          key: aom-apple-${{ hashFiles('third_party/vox_av1/build-aom-apple.sh') }}
+      - name: Build libaom (Apple)
+        if: steps.aom.outputs.cache-hit != 'true'
+        timeout-minutes: 30
+        run: third_party/vox_av1/build-aom-apple.sh
       - id: fv
         shell: bash
         run: echo "v=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_OUTPUT"
@@ -408,6 +404,14 @@ jobs:
             built=$(vtool -show-build "$fw/$(plutil -extract CFBundleExecutable raw "$fw/Info.plist")" | awk '/minos/ {print $2; exit}')
             [ "$(printf '%s\n' "$built" "$declared" | sort -V | tail -1)" = "$declared" ] ||
               { echo "::error::$(basename "$fw"): MinimumOSVersion $declared is below its binary's minimum iOS $built"; exit 1; }
+          done
+      - name: Check native libraries are in the app
+        run: |
+          set -euo pipefail
+          for f in codec2:codec2_create ggwave:ggwave_init vox_av1:vox_av1_encode; do
+            lib=${f%%:*}
+            nm -gU "build/ios/iphoneos/Runner.app/Frameworks/$lib.framework/$lib" | grep -q "_${f#*:}$" ||
+              { echo "::error::$lib.framework does not export ${f#*:}"; exit 1; }
           done
       - uses: actions/upload-artifact@v4
         with:
