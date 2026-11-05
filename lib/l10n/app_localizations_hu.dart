@@ -1473,7 +1473,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String get appSettings_showRepeaterPath => 'Repeaters under hop count';
 
   @override
-  String get appSettings_showRepeaterPathSubtitle => 'List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.';
+  String get appSettings_showRepeaterPathSubtitle =>
+      'List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.';
 
   @override
   String get chat_repeaterPathMedia => 'Voice/photo packets';
