@@ -197,6 +197,46 @@ void main() {
     expect(parseTransit('… due to police activity'), isNull);
   });
 
+  test('BC Transit posts (mcIRC) are alerts on a transit channel', () {
+    final a = parseTransit(
+      'BC Transit: #40 at 4:06PM from Downtown is cancelled',
+      alertPosts: true,
+    )!;
+    expect(a.kind, TransitKind.alert);
+    expect(a.agency, 'bct');
+    expect(a.route, '40');
+    expect(a.routeMode, TransitMode.bus);
+    expect(a.title, 'BC Transit 40');
+    expect(a.headline, 'BC Transit 40');
+    expect(a.alerts, ['Route 40 at 4:06PM from Downtown is cancelled']);
+    expect(a.status, 'CANCELLED');
+    expect(a.warns, isTrue);
+    expect(transitAgencyName(a.agency), 'BC Transit');
+
+    final b = parseTransit(
+      'BC Transit: #8 from VIU at 3:54PM is cancelled',
+      alertPosts: true,
+    )!;
+    expect(b.route, '8');
+    expect(b.alerts, ['Route 8 from VIU at 3:54PM is cancelled']);
+
+    // Not a cancellation: still an alert, no route when none is named.
+    final c = parseTransit(
+      'BC Transit: Detours downtown for the parade',
+      alertPosts: true,
+    )!;
+    expect(c.kind, TransitKind.alert);
+    expect(c.route, isNull);
+    expect(c.title, 'BC Transit');
+    expect(c.status, 'ALERT');
+
+    // Only on a transit channel, as BusBot's own alert posts.
+    expect(
+      parseTransit('BC Transit: #40 at 4:06PM from Downtown is cancelled'),
+      isNull,
+    );
+  });
+
   test("other channels' messages aren't transit", () {
     expect(parseTransit('🔴 CRITICAL\n10-03 11:30\n🧊 @Auburn'), isNull);
     expect(parseTransit('meet at the bus stop - now'), isNull);

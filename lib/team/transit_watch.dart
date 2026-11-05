@@ -18,6 +18,9 @@
 // together ([TransitReport.merge]). Wadamesh TAK reads the same format
 // (src/ui-touch/TransitFeed.h).
 //
+// BC Transit's service posts, relayed into #transit by mcIRC, are read as
+// alerts too: "BC Transit: #40 at 4:06PM from Downtown is cancelled".
+//
 // Pure Dart: no Flutter, host-tested in test/transit_watch_test.dart.
 
 /// What a BusBot reply is about.
@@ -79,6 +82,7 @@ const Map<String, String> transitAgencies = {
   'kt': 'Kitsap Transit',
   'wsf': 'Washington State Ferries',
   'mono': 'Seattle Center Monorail',
+  'bct': 'BC Transit',
 };
 
 const String transitDefaultAgency = 'kcm';
@@ -261,6 +265,10 @@ class TransitReport {
     TransitKind.plan => 'TRIP',
     TransitKind.search => 'STOPS',
     TransitKind.alerts => 'ALERTS',
+    TransitKind.alert when alerts.any(
+      (a) => a.toLowerCase().contains('cancel'),
+    ) =>
+      'CANCELLED',
     TransitKind.alert => 'ALERT',
     _ => switch (routeMode ?? (arrivals.isEmpty ? null : arrivals.first.mode)) {
       TransitMode.ferry => 'FERRY',
@@ -340,6 +348,9 @@ final _planHeadRe = RegExp(
 );
 final _searchHeadRe = RegExp(r'^(?:🔎|📍)\s+(.+):$');
 final _partTagRe = RegExp(r'\s*\[([12])/2 ([0-9a-z]{2})\]$');
+// "BC Transit: #8 from VIU at 3:54PM is cancelled" (mcIRC's relay).
+final _bcTransitRe = RegExp(r'^BC Transit:\s+(.+)$', caseSensitive: false);
+final _bcRouteRe = RegExp(r'#([0-9A-Za-z]{1,6})\b');
 final _alertPostRe = RegExp(r'^⚠\uFE0F?\s+(?:([^:\n]{1,40}):\s+)?(.+)$');
 const _timeAlt = r'now|\d+\s+mins?|\d{1,2}:\d{2}';
 final _arrivalRe = RegExp(
@@ -471,6 +482,22 @@ TransitReport? parseTransit(String text, {bool alertPosts = false}) {
     kind = TransitKind.alert;
     title = h![1] ?? 'Service alert';
     alerts.add(h[2]!);
+    body = lines.sublist(1);
+  } else if (alertPosts &&
+      lines.length == 1 &&
+      (h = _bcTransitRe.firstMatch(post)) != null) {
+    // "BC Transit: #40 at 4:06PM from Downtown is cancelled": the route is the
+    // "#40" (written as a hashtag), shown as "Route 40" in the text.
+    kind = TransitKind.alert;
+    agency = 'bct';
+    final text = h![1]!.trim();
+    final r = _bcRouteRe.firstMatch(text);
+    route = r?[1];
+    if (route != null) routeMode = TransitMode.bus;
+    title = route == null ? 'BC Transit' : 'BC Transit $route';
+    alerts.add(
+      r == null ? text : text.replaceRange(r.start, r.end, 'Route $route'),
+    );
     body = lines.sublist(1);
   }
 
