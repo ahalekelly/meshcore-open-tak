@@ -981,6 +981,7 @@ class _FakeMotaConnector extends MeshCoreConnector {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+    Object? replyTag,
   }) async {
     if (frame.length >= pubKeySize + 1 && frame[0] == cmdSendLogin) {
       final response = Uint8List.fromList(<int>[

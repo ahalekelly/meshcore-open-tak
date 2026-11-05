@@ -120,4 +120,14 @@ void main() {
       expect(queue.takeOk(), same(next));
     });
   });
+
+  test('takeReply hands back the command and its tag', () {
+    final queue = newQueue();
+    final tag = (contactKey: 'aa', timestampSeconds: 1, attempt: 0);
+    queue.track(frame([cmdSendTxtMsg, 0, 0]), tag: tag);
+    final got = queue.takeReply(frame([respCodeSent, 0, 0, 0, 0, 0]));
+    expect(got, isNotNull);
+    expect(got!.tag, tag);
+    expect(queue.takeReply(frame([respCodeSent, 0, 0, 0, 0, 0])), isNull);
+  });
 }

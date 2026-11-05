@@ -79,6 +79,7 @@ class _RadioConnector extends MeshCoreConnector {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+    Object? replyTag,
   }) async {
     handleFrameForTest(_sentFrame(222));
     handleFrameForTest(_gpsResponse(222, 45.5, -122.6));

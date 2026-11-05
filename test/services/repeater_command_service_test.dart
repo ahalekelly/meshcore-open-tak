@@ -22,6 +22,7 @@ class _FakeConnector extends MeshCoreConnector {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+    Object? replyTag,
   }) async {}
 }
 
@@ -42,6 +43,7 @@ class _ShortTimeoutConnector extends _FakeConnector {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+    Object? replyTag,
   }) async {
     sentFrames.add(data);
   }

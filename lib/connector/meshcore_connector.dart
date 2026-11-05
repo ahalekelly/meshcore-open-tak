@@ -4699,6 +4699,13 @@ class MeshCoreConnector extends ChangeNotifier {
           timestampSeconds: timestampSeconds,
         ),
         waitForGenericAck: true,
+        // Which message this SENT answers, whatever ACK the firmware chose
+        // (a firmware that stamps its own time can't be predicted, #145).
+        replyTag: (
+          contactKey: contact.publicKeyHex,
+          timestampSeconds: timestampSeconds,
+          attempt: attempt,
+        ),
       );
     } on TimeoutException catch (e) {
       appLogger.warn('No SENT reply for message: $e', tag: 'Connector');
@@ -6728,6 +6735,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+    Object? replyTag,
   }) async {
     if (!isConnected) {
       throw Exception("Not connected to a MeshCore device");
@@ -6737,6 +6745,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final pendingAck = _pendingGenericAckQueue.track(
       data,
       channelSendQueueId: channelSendQueueId,
+      tag: replyTag,
       expectsOk: expectsGenericAck || waitForGenericAck,
       waitForReply: waitForGenericAck,
     );
@@ -9562,7 +9571,8 @@ class MeshCoreConnector extends ChangeNotifier {
 
     final code = frame[0];
     // debugPrint('RX frame: code=$code len=${frame.length}');
-    final completedPendingReply = _pendingGenericAckQueue.completeReply(frame);
+    final completedReply = _pendingGenericAckQueue.takeReply(frame);
+    final completedPendingReply = completedReply != null;
 
     switch (code) {
       case respCodeOk:
@@ -9702,7 +9712,7 @@ class MeshCoreConnector extends ChangeNotifier {
         _handleIncomingChannelData(frame);
         break;
       case respCodeSent:
-        _handleMessageSent(frame);
+        _handleMessageSent(frame, completedReply?.tag);
         break;
       case respCodeExportContact:
         break;
@@ -11485,7 +11495,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  void _handleMessageSent(Uint8List frame) {
+  /// [tag]: the command this answers, when the reply FIFO knows it (a direct
+  /// message's [SentFor]).
+  void _handleMessageSent(Uint8List frame, [Object? tag]) {
     // Frame format from C++:
     // [0] = RESP_CODE_SENT
     // [1] = is_flood (1 or 0)
@@ -11504,7 +11516,11 @@ class MeshCoreConnector extends ChangeNotifier {
 
       final retryService = _retryService;
       if (retryService != null &&
-          retryService.updateMessageFromSent(ackHash, timeoutMs)) {
+          retryService.updateMessageFromSent(
+            ackHash,
+            timeoutMs,
+            sentFor: tag is SentFor ? tag : null,
+          )) {
         return;
       }
     } catch (e) {

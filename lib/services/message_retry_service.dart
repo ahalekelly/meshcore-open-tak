@@ -10,6 +10,11 @@ import '../models/path_selection.dart';
 import 'app_settings_service.dart';
 import 'app_debug_log_service.dart';
 
+/// The direct message a CMD_SEND_TXT_MSG carried, tagged on the command so its
+/// RESP_CODE_SENT can be matched to it whatever ACK the firmware returns
+/// ([MessageRetryService.updateMessageFromSent]).
+typedef SentFor = ({String contactKey, int timestampSeconds, int attempt});
+
 class _AckHistoryEntry {
   final String messageId;
   final List<int> ackHashes;
@@ -503,6 +508,26 @@ class MessageRetryService extends ChangeNotifier {
     );
   }
 
+  /// The pending message [sentFor] describes: same contact, timestamp and
+  /// attempt, still waiting for its SENT. Null when it has moved on (a late
+  /// SENT for an attempt the watchdog already retried).
+  String? _messageIdForSent(SentFor sentFor) {
+    for (final e in _pendingMessages.entries) {
+      final m = e.value;
+      final c = _pendingContacts[e.key];
+      if (c == null || c.publicKeyHex != sentFor.contactKey) continue;
+      if (m.timestamp.millisecondsSinceEpoch ~/ 1000 !=
+          sentFor.timestampSeconds) {
+        continue;
+      }
+      if (m.retryCount != sentFor.attempt) continue;
+      if (m.status != MessageStatus.pending) continue;
+      if (_resolvedMessages.contains(e.key)) continue;
+      return e.key;
+    }
+    return null;
+  }
+
   void _addAckHashMapping(
     String ackHashHex,
     String messageId,
@@ -520,7 +545,14 @@ class MessageRetryService extends ChangeNotifier {
     ));
   }
 
-  bool updateMessageFromSent(int ackHash, int timeoutMs) {
+  /// [sentFor]: the direct message this RESP_CODE_SENT answers, from the
+  /// connector's command FIFO. The firmware's ACK is the one that counts: a
+  /// companion that sends with its own timestamp (Wadamesh TAK does, so a
+  /// reused app timestamp isn't taken for a replay) returns an ACK the
+  /// prediction can't know. Without this the SENT went unmatched, the
+  /// watchdog retried, and the recipient got every attempt while the app
+  /// showed Failed (#145).
+  bool updateMessageFromSent(int ackHash, int timeoutMs, {SentFor? sentFor}) {
     // Firmware sets expected_ack = 0 for CLI/command sends (TXT_TYPE_CLI_DATA).
     // No ACK will ever be issued for these, so arming a retry timer is wrong.
     if (ackHash == 0) return false;
@@ -553,6 +585,27 @@ class MessageRetryService extends ChangeNotifier {
         );
         messageId = null;
         contact = null;
+      }
+    }
+
+    if ((messageId == null || contact == null) && sentFor != null) {
+      final byCommand = _messageIdForSent(sentFor);
+      final m = byCommand == null ? null : _pendingMessages[byCommand];
+      final c = byCommand == null ? null : _pendingContacts[byCommand];
+      if (m != null && c != null) {
+        messageId = byCommand;
+        contact = c;
+        // Its predicted hash will never come: drop it so it can't match later.
+        _expectedHashToMessageId.removeWhere((_, id) => id == byCommand);
+        final shortText = m.text.length > 20
+            ? '${m.text.substring(0, 20)}...'
+            : m.text;
+        config.debugLogService?.info(
+          'RESP_CODE_SENT: ACK hash $ackHashHex came from the firmware '
+          '(not the predicted one); matched "$shortText" to ${c.name} by '
+          'its command (attempt ${sentFor.attempt})',
+          tag: 'AckHash',
+        );
       }
     }
 
