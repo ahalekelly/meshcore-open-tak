@@ -63,6 +63,7 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+    Object? replyTag,
   }) async {
     sentFrames.add(frame);
   }
