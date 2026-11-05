@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/contact.dart';
+import '../services/app_settings_service.dart';
 import 'av1_ffi.dart';
 import 'voice_message_bubble.dart'
     show showVoxVoiceLog, VoxCaption, VoxReceivedViaLabel;
@@ -368,7 +369,14 @@ class _VoxImageMessageContentState extends State<VoxImageMessageContent> {
           VoxReceivedViaLabel(
             via: st.via!,
             color: meta,
-            repeater: st.viaRepeater,
+            // The repeater's hash is routing detail: only with
+                      // "Repeaters under hop count" on.
+                      repeater:
+                          context.select<AppSettingsService, bool>(
+                            (a) => a.settings.showRepeaterPath,
+                          )
+                          ? st.viaRepeater
+                          : null,
           ),
       ],
     );

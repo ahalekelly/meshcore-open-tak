@@ -626,7 +626,7 @@
   "appSettings_showOtherNodes": "Show Other Nodes",
   "appSettings_showOtherNodesSubtitle": "Display other node types on the map",
   "appSettings_showRepeaterPath": "Repeaters under hop count",
-  "appSettings_showRepeaterPathSubtitle": "List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.",
+  "appSettings_showRepeaterPathSubtitle": "Show the repeaters a message, voice clip or photo came through, in order from the sender to you, and which radio carried it. When off, voice and photos show only their MediaMesh hop count.",
   "chat_repeaterPathMedia": "Voice/photo packets",
   "chat_repeaterPathUnknown": "Unknown repeater",
   "appSettings_timeFilter": "Time Filter",

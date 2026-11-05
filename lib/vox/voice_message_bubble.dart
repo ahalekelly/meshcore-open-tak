@@ -12,6 +12,7 @@ import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
+import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import 'image_message_bubble.dart';
 import 'mimi.dart';
@@ -371,7 +372,14 @@ class _VoxVoiceMessageContentState extends State<VoxVoiceMessageContent> {
                     VoxReceivedViaLabel(
                       via: st.via!,
                       color: meta,
-                      repeater: st.viaRepeater,
+                      // The repeater's hash is routing detail: only with
+                      // "Repeaters under hop count" on.
+                      repeater:
+                          context.select<AppSettingsService, bool>(
+                            (a) => a.settings.showRepeaterPath,
+                          )
+                          ? st.viaRepeater
+                          : null,
                     ),
                 ],
               ),

@@ -1475,7 +1475,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get appSettings_showRepeaterPathSubtitle =>
-      'List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.';
+      'Show the repeaters a message, voice clip or photo came through, in order from the sender to you, and which radio carried it. When off, voice and photos show only their MediaMesh hop count.';
 
   @override
   String get chat_repeaterPathMedia => 'Voice/photo packets';

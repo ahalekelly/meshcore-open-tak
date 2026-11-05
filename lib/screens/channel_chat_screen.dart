@@ -1134,6 +1134,45 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     connector.setChannelUnreadCount(widget.channel.index, count);
   }
 
+  /// The default under a voice clip's or photo's hop count: just how many
+  /// hops its packets took over MediaMesh ("MediaMesh · 3 hops"), once the
+  /// radio has said one came over radio2. Nothing otherwise. The repeaters
+  /// themselves and the other radios' paths are behind the "Repeaters under
+  /// hop count" setting ([_buildRepeaterPath]).
+  Widget _buildMediaMeshHops({
+    required VoxVoiceEnvelope voxEnvelope,
+    required Color color,
+    required double textScale,
+    required bool padSides,
+  }) {
+    final voice = context.read<VoxVoiceService>();
+    return ListenableBuilder(
+      listenable: voice,
+      builder: (context, _) {
+        final path = voice
+            .stateFor(voxEnvelope)
+            .viaPaths
+            ?.byRadio[VoxPathRadio.mediaMesh];
+        if (path == null) return const SizedBox.shrink();
+        final l10n = context.l10n;
+        final hops = path.hopCount == 0
+            ? l10n.chat_direct
+            : l10n.chat_hopsCount(path.hopCount);
+        return Padding(
+          padding: padSides
+              ? const EdgeInsets.symmetric(horizontal: 8)
+              : EdgeInsets.zero,
+          child: RepeaterPathList(
+            hops: const [],
+            label: '${l10n.chat_repeaterPathMediaMesh} · $hops',
+            color: color,
+            textScale: textScale,
+          ),
+        );
+      },
+    );
+  }
+
   /// The repeaters under the hop count (the "Repeaters under hop count"
   /// setting), in relay order from the sender to this radio. For a voice
   /// clip or photo, the path its media packets took on each radio, labelled
@@ -1553,6 +1592,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             voxEnvelope: voxEnvelope,
                             path: displayPath,
                             hashWidth: displayPathHashWidth,
+                            color: metaColor,
+                            textScale: textScale,
+                            padSides: gifId != null,
+                          )
+                        else if (voxEnvelope != null && !isOutgoing)
+                          _buildMediaMeshHops(
+                            voxEnvelope: voxEnvelope,
                             color: metaColor,
                             textScale: textScale,
                             padSides: gifId != null,

@@ -2683,7 +2683,7 @@ abstract class AppLocalizations {
   /// No description provided for @appSettings_showRepeaterPathSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.'**
+  /// **'Show the repeaters a message, voice clip or photo came through, in order from the sender to you, and which radio carried it. When off, voice and photos show only their MediaMesh hop count.'**
   String get appSettings_showRepeaterPathSubtitle;
 
   /// No description provided for @chat_repeaterPathMedia.
