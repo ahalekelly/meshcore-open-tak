@@ -26,6 +26,10 @@ class PendingCommandReply {
   /// For GET_CONTACT_BY_KEY: only a CONTACT frame for this key is the reply.
   final Uint8List? matchKey;
   final String? channelSendQueueId;
+
+  /// What the sender wants to know about its reply (a direct message's
+  /// [SentFor]): the reply's handler reads it back from [takeReply].
+  final Object? tag;
   final Completer<void>? completer;
   final DateTime createdAt;
 
@@ -41,6 +45,7 @@ class PendingCommandReply {
     required this.replyCode,
     this.matchKey,
     this.channelSendQueueId,
+    this.tag,
     this.completer,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
@@ -142,6 +147,7 @@ class PendingCommandReplies {
   PendingCommandReply? track(
     Uint8List data, {
     String? channelSendQueueId,
+    Object? tag,
     bool expectsOk = false,
     bool waitForReply = false,
   }) {
@@ -156,6 +162,7 @@ class PendingCommandReplies {
           ? Uint8List.fromList(data.sublist(1, 1 + pubKeySize))
           : null,
       channelSendQueueId: channelSendQueueId,
+      tag: tag,
       completer: waitForReply ? Completer<void>() : null,
       createdAt: _clock(),
     );
@@ -180,11 +187,15 @@ class PendingCommandReplies {
   void clear() => _queue.clear();
 
   /// Completes the oldest command whose success reply is [frame]'s code.
-  bool completeReply(Uint8List frame) {
-    if (frame.isEmpty) return false;
+  bool completeReply(Uint8List frame) => takeReply(frame) != null;
+
+  /// As [completeReply], returning the command [frame] answers (with its
+  /// [PendingCommandReply.tag]), or null when it answers none.
+  PendingCommandReply? takeReply(Uint8List frame) {
+    if (frame.isEmpty) return null;
     _pruneStale();
     final code = frame[0];
-    if (code == respCodeOk || code == respCodeErr) return false;
+    if (code == respCodeOk || code == respCodeErr) return null;
     final key = code == respCodeContact && frame.length >= 1 + pubKeySize
         ? frame.sublist(1, 1 + pubKeySize)
         : null;
@@ -193,9 +204,10 @@ class PendingCommandReplies {
           p.replyCode == code &&
           (p.matchKey == null || listEquals(p.matchKey, key)),
     );
-    if (index < 0) return false;
-    _queue.removeAt(index).completer?.complete();
-    return true;
+    if (index < 0) return null;
+    final pending = _queue.removeAt(index);
+    pending.completer?.complete();
+    return pending;
   }
 
   /// Attributes RESP_CODE_OK; commands expecting a specific reply are skipped.

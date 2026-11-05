@@ -79,6 +79,58 @@ void main() {
     expect(latest.values.single.status, MessageStatus.sent);
   });
 
+  // #145: a companion that stamps its own time (Wadamesh TAK) returns an ACK
+  // the app can't predict. Its SENT is matched by the command it answers,
+  // and the delivery confirmation with that ACK then delivers the message.
+  test("SENT with the firmware's own ACK is matched by its command", () async {
+    final contact = _contact();
+    await service.sendMessageWithRetry(contact: contact, text: 'hello');
+    await pumpEventQueue();
+
+    timeoutMs = 60000;
+    const firmwareAck = 0x0BADF00D;
+    expect(firmwareAck, isNot(ackHashFor(0)));
+    // Unmatched without knowing which command it answers (the old behaviour).
+    expect(service.updateMessageFromSent(firmwareAck, 0), isFalse);
+    final sentFor = (
+      contactKey: contact.publicKeyHex,
+      timestampSeconds: sends.first.timestamp,
+      attempt: 0,
+    );
+    expect(
+      service.updateMessageFromSent(firmwareAck, 0, sentFor: sentFor),
+      isTrue,
+    );
+    expect(latest.values.single.status, MessageStatus.sent);
+
+    service.handleAckReceived(firmwareAck, 900);
+    expect(latest.values.single.status, MessageStatus.delivered);
+    expect(service.hasPendingMessages, isFalse);
+
+    // No retry went out: the recipient gets it once.
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    expect(sends, hasLength(1));
+  });
+
+  test('a SENT for an attempt already retried is not taken', () async {
+    final contact = _contact();
+    await service.sendMessageWithRetry(contact: contact, text: 'hello');
+    await pumpEventQueue();
+    // The watchdog gives up on attempt 0; the message moves on to attempt 1.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(latest.values.single.retryCount, 1);
+
+    final stale = (
+      contactKey: contact.publicKeyHex,
+      timestampSeconds: sends.first.timestamp,
+      attempt: 0,
+    );
+    expect(
+      service.updateMessageFromSent(0x0BADF00D, 0, sentFor: stale),
+      isFalse,
+    );
+  });
+
   test('late ACK for an attempt whose SENT was lost still delivers', () async {
     await service.sendMessageWithRetry(contact: _contact(), text: 'hello');
     await pumpEventQueue();
