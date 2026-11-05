@@ -1249,6 +1249,9 @@
     }
   },
   "chat_removePath": "Remove path",
+  "chat_repeaterPathMainMesh": "Main mesh",
+  "chat_repeaterPathMediaMesh": "MediaMesh",
+  "chat_repeaterPathRadioUnknown": "Radio not reported",
   "chat_noPathHistoryYet": "No path history yet.\nSend a message to discover paths.",
   "chat_pathCleared": "Path cleared. Next message will rediscover route.",
   "chat_fullPath": "Full Path",

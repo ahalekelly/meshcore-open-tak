@@ -2405,6 +2405,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_removePath => 'Távolítsa el az útvonalat';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Még nincs úttörténet.\nÜzenet küldése utak felfedezéséhez.';
 

@@ -2430,6 +2430,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chat_removePath => 'Usuń ścieżkę';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Brak historii ścieżek.\nWyślij wiadomość, aby odkryć ścieżki.';
 

@@ -2313,6 +2313,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_removePath => '경로 제거';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet => '아직 경로 기록이 없습니다.\n경로를 찾기 위해 메시지를 보내세요.';
 
   @override

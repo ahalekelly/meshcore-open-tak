@@ -2416,6 +2416,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chat_removePath => 'Rimuovi percorso';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Non c\'è ancora una cronologia del percorso.\nInvia un messaggio per scoprire i percorsi.';
 

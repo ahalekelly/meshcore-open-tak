@@ -2400,6 +2400,15 @@ class AppLocalizationsSl extends AppLocalizations {
   String get chat_removePath => 'Izbriši pot';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Ni shranjenih poti.\nPošlji sporočilo za odkrivanje poti.';
 

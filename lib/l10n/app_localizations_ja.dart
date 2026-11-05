@@ -2310,6 +2310,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_removePath => '経路を削除';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet => 'まだ経路履歴はありません。\n経路を見つけるにはメッセージを送信してください。';
 
   @override

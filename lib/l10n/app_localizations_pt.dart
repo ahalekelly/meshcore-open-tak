@@ -2408,6 +2408,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chat_removePath => 'Remover caminho';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Ainda não há histórico de caminhos.\nEnvie uma mensagem para descobrir caminhos.';
 

@@ -2279,6 +2279,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_removePath => '移除路径';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet => '暂无路径历史。\n发送消息以探索路径。';
 
   @override

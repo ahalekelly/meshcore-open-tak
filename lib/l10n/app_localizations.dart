@@ -4258,6 +4258,24 @@ abstract class AppLocalizations {
   /// **'Remove path'**
   String get chat_removePath;
 
+  /// No description provided for @chat_repeaterPathMainMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Main mesh'**
+  String get chat_repeaterPathMainMesh;
+
+  /// No description provided for @chat_repeaterPathMediaMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'MediaMesh'**
+  String get chat_repeaterPathMediaMesh;
+
+  /// No description provided for @chat_repeaterPathRadioUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio not reported'**
+  String get chat_repeaterPathRadioUnknown;
+
   /// No description provided for @chat_noPathHistoryYet.
   ///
   /// In en, this message translates to:

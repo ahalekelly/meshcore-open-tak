@@ -2401,6 +2401,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get chat_removePath => 'Pad verwijderen';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Nog geen padgeschiedenis.\nStuur een bericht om paden te ontdekken.';
 

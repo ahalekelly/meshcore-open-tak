@@ -2418,6 +2418,15 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_removePath => 'Премахни пътя';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Няма история на пътищата още.\nИзпратете съобщение, за да откриете пътища.';
 

@@ -7,6 +7,7 @@
 // repeater that relayed it, in order. This keeps the last few GRP_DATA raw
 // packets and hands their path to the data frame that follows.
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart'
@@ -183,3 +184,73 @@ bool _startsWith(Uint8List key, List<int> prefix) {
 
 String _hexBytes(List<int> b) =>
     b.map((v) => v.toRadixString(16).padLeft(2, '0')).join();
+
+/// Which radio a path was heard on.
+enum VoxPathRadio {
+  /// radio2: MediaMesh.
+  mediaMesh,
+  mainMesh,
+
+  /// The radio didn't say (firmware that doesn't tag frames).
+  unknown;
+
+  /// From a frame's radio tag: 0 main mesh, 1 radio2, null untagged.
+  static VoxPathRadio fromVia(int? via) => switch (via) {
+    0 => mainMesh,
+    1 => mediaMesh,
+    _ => unknown,
+  };
+
+  String get _key => switch (this) {
+    mediaMesh => '1',
+    mainMesh => '0',
+    unknown => '?',
+  };
+}
+
+/// The latest path a clip's packets took on each radio. A clip can come
+/// over both: each radio keeps its own.
+class VoxClipPaths {
+  final Map<VoxPathRadio, VoxRxPath> byRadio;
+
+  const VoxClipPaths(this.byRadio);
+
+  bool get isEmpty => byRadio.isEmpty;
+
+  /// MediaMesh first, then the main mesh, then untagged.
+  List<MapEntry<VoxPathRadio, VoxRxPath>> get ordered => [
+    for (final r in VoxPathRadio.values)
+      if (byRadio[r] != null) MapEntry(r, byRadio[r]!),
+  ];
+
+  /// This with [path] as the latest on [radio].
+  VoxClipPaths withPath(VoxPathRadio radio, VoxRxPath path) =>
+      VoxClipPaths({...byRadio, radio: path});
+
+  /// `{"1":"1:a3>7f","0":"1:12"}`, for saving.
+  String toStorage() => jsonEncode({
+    for (final e in byRadio.entries) e.key._key: e.value.toStorage(),
+  });
+
+  /// Reads [toStorage]'s form, or a single [VoxRxPath.toStorage] path (what
+  /// build 1235 saved, radio unknown). Null if it is neither.
+  static VoxClipPaths? fromStorage(String s) {
+    if (!s.startsWith('{')) {
+      final p = VoxRxPath.fromStorage(s);
+      return p == null ? null : VoxClipPaths({VoxPathRadio.unknown: p});
+    }
+    try {
+      final map = jsonDecode(s);
+      if (map is! Map) return null;
+      final out = <VoxPathRadio, VoxRxPath>{};
+      for (final r in VoxPathRadio.values) {
+        final v = map[r._key];
+        final p = v is String ? VoxRxPath.fromStorage(v) : null;
+        if (p != null) out[r] = p;
+      }
+      return out.isEmpty ? null : VoxClipPaths(out);
+    } catch (_) {
+      return null;
+    }
+  }
+}

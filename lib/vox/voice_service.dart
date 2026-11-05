@@ -102,10 +102,10 @@ class VoxClipState {
   /// ("1ffb"), when the radio said.
   final String? viaRepeater;
 
-  /// The repeaters its latest channel packet came through, in relay order
-  /// (from the sender's side to this radio), when the radio logged the raw
-  /// packet. Empty hops: heard directly.
-  final VoxRxPath? viaPath;
+  /// The repeaters its latest channel packet on each radio came through, in
+  /// relay order (from the sender's side to this radio), when the radio
+  /// logged the raw packet. A path with no hops: heard directly.
+  final VoxClipPaths? viaPaths;
 
   const VoxClipState(
     this.status, {
@@ -114,7 +114,7 @@ class VoxClipState {
     this.message,
     this.via,
     this.viaRepeater,
-    this.viaPath,
+    this.viaPaths,
   });
 
   double get progress => total == 0 ? 0 : received / total;
@@ -275,8 +275,8 @@ class VoxVoiceService extends ChangeNotifier {
 
   static const _kReceivedViaPath = 'vox_received_via_path';
 
-  /// sid -> the repeater path of its latest channel packet, on either radio
-  /// ([VoxRxPath.toStorage] form), for the repeater list under the hops.
+  /// sid -> the repeater path of its latest channel packet on each radio
+  /// ([VoxClipPaths.toStorage] form), for the repeater list under the hops.
   final Map<String, String> _viaPath = {};
 
   Future<void> _loadReceivedVia() async {
@@ -350,19 +350,23 @@ class VoxVoiceService extends ChangeNotifier {
     _logEvent('packets arriving via $key', sid);
   }
 
-  /// Keeps the repeater path of [sid]'s latest channel packet.
-  void _notePath(String sid, VoxRxPath? path) {
+  /// Keeps the repeater path of [sid]'s latest channel packet on the radio
+  /// it came in on ([via]: 0 main mesh, 1 radio2, null untagged).
+  void _notePath(String sid, int? via, VoxRxPath? path) {
     if (path == null) return;
+    final old = _pathsFor(sid) ?? const VoxClipPaths({});
     _viaPath.remove(sid); // re-inserted: the most recent clips are kept
-    _viaPath[sid] = path.toStorage();
+    _viaPath[sid] = old
+        .withPath(VoxPathRadio.fromVia(via), path)
+        .toStorage();
     while (_viaPath.length > _maxReceivedVia) {
       _viaPath.remove(_viaPath.keys.first);
     }
   }
 
-  VoxRxPath? _pathFor(String sid) {
+  VoxClipPaths? _pathsFor(String sid) {
     final s = _viaPath[sid];
-    return s == null ? null : VoxRxPath.fromStorage(s);
+    return s == null ? null : VoxClipPaths.fromStorage(s);
   }
 
   void _noteVia(String sid, int? via, [Uint8List? lastHop]) {
@@ -1320,7 +1324,7 @@ class VoxVoiceService extends ChangeNotifier {
             ? null
             : VoxReceivedVia.forReceived(_viaMask[sid]),
         viaRepeater: _ownClips.contains(sid) || !r2 ? null : _viaHop[sid],
-        viaPath: _ownClips.contains(sid) ? null : _pathFor(sid),
+        viaPaths: _ownClips.contains(sid) ? null : _pathsFor(sid),
       );
     }
     final clip = _incoming[sid];
@@ -1332,7 +1336,7 @@ class VoxVoiceService extends ChangeNotifier {
       received: clip.packets.length,
       total: env.totalPackets,
       message: clip.message,
-      viaPath: _pathFor(sid),
+      viaPaths: _pathsFor(sid),
     );
   }
 
@@ -2515,7 +2519,7 @@ class VoxVoiceService extends ChangeNotifier {
       return;
     }
     _noteVia(sid, via, lastHop);
-    _notePath(sid, path);
+    _notePath(sid, via, path);
     // Raw data doesn't say how far it came: treat it as relayed.
     final relayed = hops == null || hops > 0;
     final clip = _incoming[sid];

@@ -2386,6 +2386,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_removePath => 'Ta bort rutt';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Ingen rutthistorik ännu.\nSkicka ett meddelande för att upptäcka rutter.';
 

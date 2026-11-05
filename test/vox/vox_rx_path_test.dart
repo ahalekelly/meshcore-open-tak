@@ -123,4 +123,43 @@ void main() {
     final on = AppSettings().copyWith(showRepeaterPath: true);
     expect(AppSettings.fromJson(on.toJson()).showRepeaterPath, isTrue);
   });
+
+  group('per-radio clip paths', () {
+    final r2 = parseRxLogPath(rxLog(path: [0xa3, 0x7f]))!;
+    final main = parseRxLogPath(rxLog(path: [0x12]))!;
+
+    test('each radio keeps its own latest path', () {
+      final paths = const VoxClipPaths({})
+          .withPath(VoxPathRadio.fromVia(0), main)
+          .withPath(VoxPathRadio.fromVia(1), r2)
+          .withPath(VoxPathRadio.fromVia(null), main);
+      expect(paths.ordered.map((e) => e.key), [
+        VoxPathRadio.mediaMesh,
+        VoxPathRadio.mainMesh,
+        VoxPathRadio.unknown,
+      ]);
+      expect(paths.byRadio[VoxPathRadio.mediaMesh]!.hex, 'a3>7f');
+      final newer = parseRxLogPath(rxLog(path: [0x55]))!;
+      expect(
+        paths
+            .withPath(VoxPathRadio.mediaMesh, newer)
+            .byRadio[VoxPathRadio.mainMesh]!
+            .hex,
+        '12',
+      );
+    });
+
+    test('saves and reads back, and reads the old single-path form', () {
+      final paths = VoxClipPaths({
+        VoxPathRadio.mediaMesh: r2,
+        VoxPathRadio.mainMesh: main,
+      });
+      final back = VoxClipPaths.fromStorage(paths.toStorage())!;
+      expect(back.byRadio[VoxPathRadio.mediaMesh]!.hex, 'a3>7f');
+      expect(back.byRadio[VoxPathRadio.mainMesh]!.hex, '12');
+      final old = VoxClipPaths.fromStorage(r2.toStorage())!;
+      expect(old.byRadio.keys, [VoxPathRadio.unknown]);
+      expect(VoxClipPaths.fromStorage('{"x":1}'), isNull);
+    });
+  });
 }

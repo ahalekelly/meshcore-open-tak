@@ -81,6 +81,7 @@ import '../vox/voice_message_bubble.dart';
 import '../vox/voice_record_sheet.dart';
 import '../vox/voice_service.dart';
 import '../vox/voice_wire.dart';
+import '../vox/vox_rx_path.dart' show VoxPathRadio;
 import '../team/message_reach_screen.dart';
 import '../vox/walkie_service.dart';
 import '../vox/walkie_sheet.dart';
@@ -1135,8 +1136,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   /// The repeaters under the hop count (the "Repeaters under hop count"
   /// setting), in relay order from the sender to this radio. For a voice
-  /// clip or photo, the path its media packets took, once one has arrived;
-  /// otherwise the message's own path.
+  /// clip or photo, the path its media packets took on each radio, labelled
+  /// with the radio, once one has arrived; otherwise the message's own path.
   Widget _buildRepeaterPath({
     required ChannelMessage message,
     required VoxVoiceEnvelope? voxEnvelope,
@@ -1165,13 +1166,33 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return ListenableBuilder(
       listenable: voice,
       builder: (context, _) {
-        final media = voice.stateFor(voxEnvelope).viaPath;
-        if (media == null) return textPath();
+        final paths = voice.stateFor(voxEnvelope).viaPaths;
+        if (paths == null || paths.isEmpty) return textPath();
         final l10n = context.l10n;
-        final hops = media.hopCount == 0
-            ? l10n.chat_direct
-            : l10n.chat_hopsCount(media.hopCount);
-        return list(media.hops, '${l10n.chat_repeaterPathMedia} · $hops');
+        // One list per radio the media came over: MediaMesh, then the main
+        // mesh, then a radio that didn't say which.
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final e in paths.ordered)
+              list(
+                e.value.hops,
+                [
+                  l10n.chat_repeaterPathMedia,
+                  switch (e.key) {
+                    VoxPathRadio.mediaMesh => l10n.chat_repeaterPathMediaMesh,
+                    VoxPathRadio.mainMesh => l10n.chat_repeaterPathMainMesh,
+                    VoxPathRadio.unknown =>
+                      l10n.chat_repeaterPathRadioUnknown,
+                  },
+                  e.value.hopCount == 0
+                      ? l10n.chat_direct
+                      : l10n.chat_hopsCount(e.value.hopCount),
+                ].join(' · '),
+              ),
+          ],
+        );
       },
     );
   }

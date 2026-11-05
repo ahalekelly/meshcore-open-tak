@@ -2415,6 +2415,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_removePath => 'Supprimer le chemin';
 
   @override
+  String get chat_repeaterPathMainMesh => 'Main mesh';
+
+  @override
+  String get chat_repeaterPathMediaMesh => 'MediaMesh';
+
+  @override
+  String get chat_repeaterPathRadioUnknown => 'Radio not reported';
+
+  @override
   String get chat_noPathHistoryYet =>
       'Aucun historique de parcours disponible.\nEnvoyez un message pour découvrir les parcours.';
 
