@@ -2674,6 +2674,30 @@ abstract class AppLocalizations {
   /// **'Display other node types on the map'**
   String get appSettings_showOtherNodesSubtitle;
 
+  /// No description provided for @appSettings_showRepeaterPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeaters under hop count'**
+  String get appSettings_showRepeaterPath;
+
+  /// No description provided for @appSettings_showRepeaterPathSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.'**
+  String get appSettings_showRepeaterPathSubtitle;
+
+  /// No description provided for @chat_repeaterPathMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice/photo packets'**
+  String get chat_repeaterPathMedia;
+
+  /// No description provided for @chat_repeaterPathUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown repeater'**
+  String get chat_repeaterPathUnknown;
+
   /// No description provided for @appSettings_timeFilter.
   ///
   /// In en, this message translates to:

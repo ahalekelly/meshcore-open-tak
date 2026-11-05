@@ -102,6 +102,11 @@ class VoxClipState {
   /// ("1ffb"), when the radio said.
   final String? viaRepeater;
 
+  /// The repeaters its latest channel packet came through, in relay order
+  /// (from the sender's side to this radio), when the radio logged the raw
+  /// packet. Empty hops: heard directly.
+  final VoxRxPath? viaPath;
+
   const VoxClipState(
     this.status, {
     this.received = 0,
@@ -109,6 +114,7 @@ class VoxClipState {
     this.message,
     this.via,
     this.viaRepeater,
+    this.viaPath,
   });
 
   double get progress => total == 0 ? 0 : received / total;
@@ -267,9 +273,24 @@ class VoxVoiceService extends ChangeNotifier {
   /// came through, for "Received via MediaMesh (1ffb)".
   final Map<String, String> _viaHop = {};
 
+  static const _kReceivedViaPath = 'vox_received_via_path';
+
+  /// sid -> the repeater path of its latest channel packet, on either radio
+  /// ([VoxRxPath.toStorage] form), for the repeater list under the hops.
+  final Map<String, String> _viaPath = {};
+
   Future<void> _loadReceivedVia() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final paths = prefs.getString(_kReceivedViaPath);
+      final pmap = paths == null ? null : jsonDecode(paths);
+      if (pmap is Map) {
+        for (final e in pmap.entries) {
+          if (e.key is String && e.value is String) {
+            _viaPath.putIfAbsent(e.key as String, () => e.value as String);
+          }
+        }
+      }
       final raw = prefs.getString(_kReceivedVia);
       if (raw == null) return;
       final map = jsonDecode(raw);
@@ -329,6 +350,21 @@ class VoxVoiceService extends ChangeNotifier {
     _logEvent('packets arriving via $key', sid);
   }
 
+  /// Keeps the repeater path of [sid]'s latest channel packet.
+  void _notePath(String sid, VoxRxPath? path) {
+    if (path == null) return;
+    _viaPath.remove(sid); // re-inserted: the most recent clips are kept
+    _viaPath[sid] = path.toStorage();
+    while (_viaPath.length > _maxReceivedVia) {
+      _viaPath.remove(_viaPath.keys.first);
+    }
+  }
+
+  VoxRxPath? _pathFor(String sid) {
+    final s = _viaPath[sid];
+    return s == null ? null : VoxRxPath.fromStorage(s);
+  }
+
   void _noteVia(String sid, int? via, [Uint8List? lastHop]) {
     if (via == null) return;
     // The MediaMesh repeater this radio2 packet came through, the latest kept.
@@ -369,6 +405,11 @@ class VoxVoiceService extends ChangeNotifier {
           if (_bits.containsKey(e.key)) e.key: e.value,
       };
       await prefs.setString(_kReceivedViaHop, jsonEncode(hops));
+      final paths = {
+        for (final e in _viaPath.entries)
+          if (_bits.containsKey(e.key)) e.key: e.value,
+      };
+      await prefs.setString(_kReceivedViaPath, jsonEncode(paths));
     } catch (_) {}
   }
 
@@ -1279,6 +1320,7 @@ class VoxVoiceService extends ChangeNotifier {
             ? null
             : VoxReceivedVia.forReceived(_viaMask[sid]),
         viaRepeater: _ownClips.contains(sid) || !r2 ? null : _viaHop[sid],
+        viaPath: _ownClips.contains(sid) ? null : _pathFor(sid),
       );
     }
     final clip = _incoming[sid];
@@ -1290,6 +1332,7 @@ class VoxVoiceService extends ChangeNotifier {
       received: clip.packets.length,
       total: env.totalPackets,
       message: clip.message,
+      viaPath: _pathFor(sid),
     );
   }
 
@@ -2472,6 +2515,7 @@ class VoxVoiceService extends ChangeNotifier {
       return;
     }
     _noteVia(sid, via, lastHop);
+    _notePath(sid, path);
     // Raw data doesn't say how far it came: treat it as relayed.
     final relayed = hops == null || hops > 0;
     final clip = _incoming[sid];

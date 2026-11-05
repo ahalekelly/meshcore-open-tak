@@ -152,6 +152,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(regionOnHopsLine: value));
   }
 
+  Future<void> setShowRepeaterPath(bool value) async {
+    await updateSettings(_settings.copyWith(showRepeaterPath: value));
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }

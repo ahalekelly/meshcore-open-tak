@@ -1385,6 +1385,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_showOtherNodesSubtitle => '在地图上显示其他节点类型';
 
   @override
+  String get appSettings_showRepeaterPath => 'Repeaters under hop count';
+
+  @override
+  String get appSettings_showRepeaterPathSubtitle => 'List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.';
+
+  @override
+  String get chat_repeaterPathMedia => 'Voice/photo packets';
+
+  @override
+  String get chat_repeaterPathUnknown => 'Unknown repeater';
+
+  @override
   String get appSettings_timeFilter => '时间过滤器';
 
   @override

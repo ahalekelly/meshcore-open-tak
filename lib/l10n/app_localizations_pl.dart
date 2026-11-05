@@ -1485,6 +1485,18 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wyświetl inne typy węzłów na mapie';
 
   @override
+  String get appSettings_showRepeaterPath => 'Repeaters under hop count';
+
+  @override
+  String get appSettings_showRepeaterPathSubtitle => 'List the repeaters a channel message, voice clip or photo came through below its hop count, in order from the sender to you.';
+
+  @override
+  String get chat_repeaterPathMedia => 'Voice/photo packets';
+
+  @override
+  String get chat_repeaterPathUnknown => 'Unknown repeater';
+
+  @override
   String get appSettings_timeFilter => 'Filtrowanie Czasu';
 
   @override

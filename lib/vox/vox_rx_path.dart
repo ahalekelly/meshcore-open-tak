@@ -32,25 +32,62 @@ class VoxRxPath {
   /// "a3>7f>12".
   String get hex => hops.map(_hexBytes).join('>');
 
+  /// "1:a3>7f>12" (hash width, then the path), for saving.
+  String toStorage() => '$hashWidth:$hex';
+
+  /// Reads [toStorage]'s form back; null if it isn't one.
+  static VoxRxPath? fromStorage(String s) {
+    final colon = s.indexOf(':');
+    if (colon < 1) return null;
+    final width = int.tryParse(s.substring(0, colon));
+    if (width == null || width < 1 || width > 3) return null;
+    final body = s.substring(colon + 1);
+    if (body.isEmpty) return VoxRxPath(width, const []);
+    final hops = <Uint8List>[];
+    for (final h in body.split('>')) {
+      if (h.length != width * 2) return null;
+      final bytes = Uint8List(width);
+      for (var i = 0; i < width; i++) {
+        final b = int.tryParse(h.substring(i * 2, i * 2 + 2), radix: 16);
+        if (b == null) return null;
+        bytes[i] = b;
+      }
+      hops.add(bytes);
+    }
+    return VoxRxPath(width, hops);
+  }
+
   /// "a3 Capitol Hill > 7f ? > 12 Rattlesnake|Tiger": each hash with the
   /// repeater(s) it matches among [contacts] ("?" for none, "|" between
   /// several when the hash is too short to tell them apart).
   String describe(Iterable<Contact> contacts) {
     if (hops.isEmpty) return '(0 hop)';
-    final relays = contacts
-        .where((c) => c.type == advTypeRepeater || c.type == advTypeRoom)
-        .toList();
+    final relays = repeatersOf(contacts);
     return hops
         .map((h) {
-          final names = relays
-              .where((c) => _startsWith(c.publicKey, h))
-              .map((c) => c.name.trim().isEmpty ? '?' : c.name.trim())
-              .toList();
+          final names = repeaterNamesForHash(relays, h);
           return '${_hexBytes(h)} ${names.isEmpty ? '?' : names.join('|')}';
         })
         .join(' > ');
   }
 }
+
+/// The repeaters and room servers among [contacts]: the nodes that relay.
+List<Contact> repeatersOf(Iterable<Contact> contacts) => contacts
+    .where((c) => c.type == advTypeRepeater || c.type == advTypeRoom)
+    .toList();
+
+/// Names of the [relays] whose public key starts with path hash [hash]:
+/// empty for an unknown repeater, several when the hash is too short to tell
+/// them apart. A relay without a name shows as "?".
+List<String> repeaterNamesForHash(List<Contact> relays, List<int> hash) => [
+  for (final c in relays)
+    if (_startsWith(c.publicKey, hash))
+      c.name.trim().isEmpty ? '?' : c.name.trim(),
+];
+
+/// Hex of a path hash, lowercase ("a3", "a301").
+String pathHashHex(List<int> hash) => _hexBytes(hash);
 
 class _Seen {
   final DateTime at;
@@ -136,7 +173,7 @@ VoxRxPath? parseRxLogPath(Uint8List frame) {
   return VoxRxPath(width, hops);
 }
 
-bool _startsWith(Uint8List key, Uint8List prefix) {
+bool _startsWith(Uint8List key, List<int> prefix) {
   if (key.length < prefix.length) return false;
   for (var i = 0; i < prefix.length; i++) {
     if (key[i] != prefix[i]) return false;

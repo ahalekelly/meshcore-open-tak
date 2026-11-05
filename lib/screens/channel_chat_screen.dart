@@ -52,6 +52,7 @@ import '../widgets/chat_send_pipeline.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/message_bubble_frame.dart';
 import '../widgets/reaction_chips.dart';
+import '../widgets/repeater_path_list.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
@@ -1132,6 +1133,49 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     connector.setChannelUnreadCount(widget.channel.index, count);
   }
 
+  /// The repeaters under the hop count (the "Repeaters under hop count"
+  /// setting), in relay order from the sender to this radio. For a voice
+  /// clip or photo, the path its media packets took, once one has arrived;
+  /// otherwise the message's own path.
+  Widget _buildRepeaterPath({
+    required ChannelMessage message,
+    required VoxVoiceEnvelope? voxEnvelope,
+    required Uint8List path,
+    required int hashWidth,
+    required Color color,
+    required double textScale,
+    required bool padSides,
+  }) {
+    final textHops = splitPathHashes(path, hashWidth);
+    Widget list(List<List<int>> hops, String? label) => Padding(
+      padding: padSides
+          ? const EdgeInsets.symmetric(horizontal: 8)
+          : EdgeInsets.zero,
+      child: RepeaterPathList(
+        hops: hops,
+        label: label,
+        color: color,
+        textScale: textScale,
+      ),
+    );
+    Widget textPath() =>
+        textHops.isEmpty ? const SizedBox.shrink() : list(textHops, null);
+    if (voxEnvelope == null || message.isOutgoing) return textPath();
+    final voice = context.read<VoxVoiceService>();
+    return ListenableBuilder(
+      listenable: voice,
+      builder: (context, _) {
+        final media = voice.stateFor(voxEnvelope).viaPath;
+        if (media == null) return textPath();
+        final l10n = context.l10n;
+        final hops = media.hopCount == 0
+            ? l10n.chat_direct
+            : l10n.chat_hopsCount(media.hopCount);
+        return list(media.hops, '${l10n.chat_repeaterPathMedia} · $hops');
+      },
+    );
+  }
+
   Widget _buildMessageBubble(
     ChannelMessage message,
     double textScale,
@@ -1141,6 +1185,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final publicIpfsGateway = settingsService.settings.publicIpfsGateway;
     final enableTracing = settingsService.settings.enableMessageTracing;
     final regionOnHopsLine = settingsService.settings.regionOnHopsLine;
+    final showRepeaterPath = settingsService.settings.showRepeaterPath;
     final isOutgoing = message.isOutgoing;
     // In an OTP-active channel, bubble SIDE is mirrored (own messages on the
     // left, others' on the right) so an OTP conversation reads visually
@@ -1482,6 +1527,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             ),
                           ),
                         ],
+                        if (showRepeaterPath)
+                          _buildRepeaterPath(
+                            message: message,
+                            voxEnvelope: voxEnvelope,
+                            path: displayPath,
+                            hashWidth: displayPathHashWidth,
+                            color: metaColor,
+                            textScale: textScale,
+                            padSides: gifId != null,
+                          ),
                         const SizedBox(height: 3),
                         Padding(
                           padding: gifId != null

@@ -3,7 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/vox/vox_rx_path.dart';
+import 'package:meshcore_open/widgets/repeater_path_list.dart';
 
 /// A PUSH_CODE_LOG_RX_DATA frame for a packet of [payloadType] with [path].
 Uint8List rxLog({
@@ -91,5 +93,34 @@ void main() {
       repeater('Rattlesnake', [0x12, 0x02]),
     ]);
     expect(names, 'a3 Capitol Hill > 7f ? > 12 Tiger|Rattlesnake');
+  });
+
+  test('a saved path reads back in the same order', () {
+    final p = parseRxLogPath(rxLog(width: 2, path: [0xa3, 1, 0x7f, 2]))!;
+    final back = VoxRxPath.fromStorage(p.toStorage())!;
+    expect(back.hashWidth, 2);
+    expect(back.hex, 'a301>7f02');
+    expect(VoxRxPath.fromStorage('1:')!.hopCount, 0);
+    expect(VoxRxPath.fromStorage('nonsense'), isNull);
+    expect(VoxRxPath.fromStorage('1:a3>7'), isNull);
+  });
+
+  test('splits a message path into hashes, first relay first', () {
+    expect(splitPathHashes([0xa3, 0x7f, 0x12], 1), [
+      [0xa3],
+      [0x7f],
+      [0x12],
+    ]);
+    expect(splitPathHashes([1, 2, 3, 4, 5], 2), [
+      [1, 2],
+      [3, 4],
+    ]);
+  });
+
+  test('the repeater list setting is off by default', () {
+    expect(AppSettings().showRepeaterPath, isFalse);
+    expect(AppSettings.fromJson(const {}).showRepeaterPath, isFalse);
+    final on = AppSettings().copyWith(showRepeaterPath: true);
+    expect(AppSettings.fromJson(on.toJson()).showRepeaterPath, isTrue);
   });
 }

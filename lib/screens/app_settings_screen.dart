@@ -517,6 +517,18 @@ class AppSettingsScreen extends StatelessWidget {
           value: settingsService.settings.regionOnHopsLine,
           onChanged: settingsService.setRegionOnHopsLine,
         ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          secondary: const Icon(Icons.format_list_numbered, size: 24),
+          title: Text(context.l10n.appSettings_showRepeaterPath),
+          subtitle: Text(context.l10n.appSettings_showRepeaterPathSubtitle),
+          value: settingsService.settings.showRepeaterPath,
+          onChanged: settingsService.setShowRepeaterPath,
+        ),
       ],
     );
   }

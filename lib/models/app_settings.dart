@@ -121,6 +121,10 @@ class AppSettings {
   // 0 = auto contrast, 1 = white, 2 = black text on OTP bubbles.
   final int otpTextMode;
   final bool regionOnHopsLine;
+
+  /// List the repeaters a channel message, voice clip or photo came
+  /// through under its hop count. Off by default.
+  final bool showRepeaterPath;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -295,6 +299,7 @@ class AppSettings {
     this.otpThemeIndex = 0,
     this.otpTextMode = 0,
     this.regionOnHopsLine = false,
+    this.showRepeaterPath = false,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -398,6 +403,7 @@ class AppSettings {
       'otp_text_mode': otpTextMode,
       'otp_theme_schema': 2,
       'region_on_hops_line': regionOnHopsLine,
+      'show_repeater_path': showRepeaterPath,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -558,6 +564,7 @@ class AppSettings {
             ][((json['otp_theme_index'] as int? ?? 0)).clamp(0, 8)],
       otpTextMode: json['otp_text_mode'] as int? ?? 0,
       regionOnHopsLine: json['region_on_hops_line'] as bool? ?? false,
+      showRepeaterPath: json['show_repeater_path'] as bool? ?? false,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -731,6 +738,7 @@ class AppSettings {
     int? otpThemeIndex,
     int? otpTextMode,
     bool? regionOnHopsLine,
+    bool? showRepeaterPath,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -818,6 +826,7 @@ class AppSettings {
       otpThemeIndex: otpThemeIndex ?? this.otpThemeIndex,
       otpTextMode: otpTextMode ?? this.otpTextMode,
       regionOnHopsLine: regionOnHopsLine ?? this.regionOnHopsLine,
+      showRepeaterPath: showRepeaterPath ?? this.showRepeaterPath,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,
