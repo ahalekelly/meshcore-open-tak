@@ -44,6 +44,7 @@ import 'voice_codec_choice.dart';
 import 'voice_dsp.dart';
 import 'vox_fec.dart';
 import 'vox_gaps.dart';
+import 'vox_rx_path.dart';
 import 'vox_voice_enhance.dart';
 import 'voice_wire.dart';
 import 'walkie_wire.dart';
@@ -295,15 +296,28 @@ class VoxVoiceService extends ChangeNotifier {
   /// whenever that changes, so the info log shows which radio carried it.
   final Map<String, String> _arrivalLogged = {};
 
-  void _logArrival(String sid, int? via, int? hops, [Uint8List? lastHop]) {
+  /// Flood paths from the raw-packet log, paired with the channel data
+  /// frames that follow them (vox_rx_path.dart).
+  final VoxRxPathTracker _rxPaths = VoxRxPathTracker();
+
+  void _logArrival(
+    String sid,
+    int? via,
+    int? hops, [
+    Uint8List? lastHop,
+    VoxRxPath? path,
+  ]) {
     final radio = switch (via) {
       0 => 'main mesh (radio tagged it)',
       1 => 'MediaMesh / radio2',
       _ => 'untagged (radio does not say which)',
     };
     // The last relay's path hash says which repeater it came through.
-    final last =
-        hops != null && hops > 0 && lastHop != null && lastHop.isNotEmpty
+    // The full path, when the radio logged the raw packet, names every
+    // repeater; otherwise only the last relay's hash may be known.
+    final last = hops != null && hops > 0 && path != null
+        ? ', path ${path.describe(_connector.contacts)}'
+        : hops != null && hops > 0 && lastHop != null && lastHop.isNotEmpty
         ? ', last hop ${_hex(lastHop)}'
         : '';
     final key = '$radio, ${hops == null ? 'direct/raw' : '$hops hops'}$last';
@@ -2297,6 +2311,10 @@ class VoxVoiceService extends ChangeNotifier {
 
   void _onFrame(Uint8List frame) {
     if (frame.isEmpty) return;
+    if (frame[0] == pushCodeLogRxData) {
+      _rxPaths.addRxLog(frame);
+      return;
+    }
     if (frame[0] == pushCodeRawData) {
       final push = RawDataPush.tryParse(frame);
       if (push != null) {
@@ -2327,12 +2345,17 @@ class VoxVoiceService extends ChangeNotifier {
     } else if (frame[0] == respCodeChannelDataRecv) {
       final parsed = parseChannelDataFrame(frame);
       if (parsed != null && parsed.dataType == voxChannelDataType) {
+        final path = _rxPaths.take(
+          hopCount: parsed.hopCount,
+          hashWidth: parsed.pathHashWidth,
+        );
         _onPayload(
           parsed.payload,
           channelIndex: parsed.channelIndex,
           via: parsed.via,
           hops: parsed.hopCount,
-          lastHop: parsed.lastHop,
+          lastHop: parsed.lastHop ?? path?.lastHop,
+          path: path,
         );
       }
     }
@@ -2344,6 +2367,7 @@ class VoxVoiceService extends ChangeNotifier {
     int? via,
     int? hops,
     Uint8List? lastHop,
+    VoxRxPath? path,
   }) {
     if (payload.isEmpty) return;
     // An untagged frame: find out whether this radio has radio2, for the
@@ -2381,12 +2405,14 @@ class VoxVoiceService extends ChangeNotifier {
           via,
           channelIndex == null ? null : hops,
           lastHop,
+          path,
         );
         _onPacket(
           pkt,
           via: via,
           hops: channelIndex == null ? null : hops,
           lastHop: lastHop,
+          path: path,
         );
       case _pingMagic:
         _onPing(payload);
@@ -2432,6 +2458,7 @@ class VoxVoiceService extends ChangeNotifier {
     int? via,
     int? hops,
     Uint8List? lastHop,
+    VoxRxPath? path,
   }) {
     final sid = pkt.sessionId;
     _noteHeard(sid, pkt.index, onChannel: hops != null);
@@ -2473,7 +2500,13 @@ class VoxVoiceService extends ChangeNotifier {
             : hops == 0
             ? 'zero-hop on the channel'
             : '$hops hops on the channel'}'
-        '${lastHop != null && lastHop.isNotEmpty && (hops ?? 0) > 0 ? ' via ${_hex(lastHop)}' : ''}',
+        '${(hops ?? 0) <= 0
+            ? ''
+            : path != null
+            ? ' via ${path.describe(_connector.contacts)}'
+            : lastHop != null && lastHop.isNotEmpty
+            ? ' via ${_hex(lastHop)}'
+            : ''}',
         sid,
       );
     }
