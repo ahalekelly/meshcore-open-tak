@@ -370,13 +370,13 @@ class _VoxImageMessageContentState extends State<VoxImageMessageContent> {
             via: st.via!,
             color: meta,
             // The repeater's hash is routing detail: only with
-                      // "Repeaters under hop count" on.
-                      repeater:
-                          context.select<AppSettingsService, bool>(
-                            (a) => a.settings.showRepeaterPath,
-                          )
-                          ? st.viaRepeater
-                          : null,
+            // "Repeaters under hop count" on.
+            repeater:
+                context.select<AppSettingsService, bool>(
+                  (a) => a.settings.showRepeaterPath,
+                )
+                ? st.viaRepeater
+                : null,
           ),
       ],
     );
