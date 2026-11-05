@@ -13,7 +13,9 @@ Uint8List rxLog({
   int width = 1,
 }) {
   final header = (payloadType << 2) | routeType;
-  final pathLen = path.isEmpty ? 0 : ((width - 1) << 6) | (path.length ~/ width);
+  final pathLen = path.isEmpty
+      ? 0
+      : ((width - 1) << 6) | (path.length ~/ width);
   return Uint8List.fromList([
     pushCodeLogRxData,
     40, // snr
@@ -27,7 +29,10 @@ Uint8List rxLog({
 }
 
 Contact repeater(String name, List<int> keyStart) => Contact(
-  publicKey: Uint8List.fromList([...keyStart, ...List.filled(32 - keyStart.length, 0)]),
+  publicKey: Uint8List.fromList([
+    ...keyStart,
+    ...List.filled(32 - keyStart.length, 0),
+  ]),
   name: name,
   type: advTypeRepeater,
   pathLength: -1,

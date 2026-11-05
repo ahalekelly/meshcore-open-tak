@@ -265,9 +265,8 @@ class TransitReport {
     TransitKind.plan => 'TRIP',
     TransitKind.search => 'STOPS',
     TransitKind.alerts => 'ALERTS',
-    TransitKind.alert when alerts.any(
-      (a) => a.toLowerCase().contains('cancel'),
-    ) =>
+    TransitKind.alert
+        when alerts.any((a) => a.toLowerCase().contains('cancel')) =>
       'CANCELLED',
     TransitKind.alert => 'ALERT',
     _ => switch (routeMode ?? (arrivals.isEmpty ? null : arrivals.first.mode)) {
