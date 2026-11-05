@@ -356,9 +356,7 @@ class VoxVoiceService extends ChangeNotifier {
     if (path == null) return;
     final old = _pathsFor(sid) ?? const VoxClipPaths({});
     _viaPath.remove(sid); // re-inserted: the most recent clips are kept
-    _viaPath[sid] = old
-        .withPath(VoxPathRadio.fromVia(via), path)
-        .toStorage();
+    _viaPath[sid] = old.withPath(VoxPathRadio.fromVia(via), path).toStorage();
     while (_viaPath.length > _maxReceivedVia) {
       _viaPath.remove(_viaPath.keys.first);
     }

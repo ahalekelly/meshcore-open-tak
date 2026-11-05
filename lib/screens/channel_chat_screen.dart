@@ -1183,8 +1183,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   switch (e.key) {
                     VoxPathRadio.mediaMesh => l10n.chat_repeaterPathMediaMesh,
                     VoxPathRadio.mainMesh => l10n.chat_repeaterPathMainMesh,
-                    VoxPathRadio.unknown =>
-                      l10n.chat_repeaterPathRadioUnknown,
+                    VoxPathRadio.unknown => l10n.chat_repeaterPathRadioUnknown,
                   },
                   e.value.hopCount == 0
                       ? l10n.chat_direct
