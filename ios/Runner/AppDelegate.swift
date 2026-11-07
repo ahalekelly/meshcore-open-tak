@@ -28,6 +28,22 @@ import UserNotifications
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "MeshOrientation") {
       MeshOrientation.shared.attach(messenger: registrar.messenger())
     }
+    // Settings > Keep screen on (lib/services/screen_awake_service.dart). iOS
+    // only honours it while the app is in front.
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "MeshScreenAwake") {
+      FlutterMethodChannel(name: "meshcore_open/screen_awake", binaryMessenger: registrar.messenger())
+        .setMethodCallHandler { call, result in
+          guard call.method == "set" else {
+            result(FlutterMethodNotImplemented)
+            return
+          }
+          let on = (call.arguments as? Bool) ?? false
+          DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = on
+            result(nil)
+          }
+        }
+    }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "MeshAppBadge") {
       let channel = FlutterMethodChannel(
         name: "meshcore_open/app_badge",

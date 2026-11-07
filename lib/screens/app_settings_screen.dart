@@ -14,6 +14,7 @@ import '../services/image_codec_service.dart';
 import '../team/map_highlights.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/notification_service.dart';
+import '../services/screen_awake_service.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
 import '../widgets/public_media_switch.dart';
@@ -256,6 +257,20 @@ class AppSettingsScreen extends StatelessWidget {
           value: settingsService.settings.holidayAnimationsEnabled,
           onChanged: settingsService.setHolidayAnimationsEnabled,
         ),
+        if (ScreenAwakeService.available) ...[
+          const Divider(height: 1, indent: 16),
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 4,
+            ),
+            secondary: const Icon(Icons.screen_lock_portrait_outlined),
+            title: Text(context.l10n.appSettings_keepScreenOn),
+            subtitle: Text(context.l10n.appSettings_keepScreenOnSubtitle),
+            value: settingsService.settings.keepScreenOn,
+            onChanged: settingsService.setKeepScreenOn,
+          ),
+        ],
         const Divider(height: 1, indent: 16),
         MeshNavTile(
           icon: Icons.language_outlined,
