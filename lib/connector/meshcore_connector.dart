@@ -11091,6 +11091,7 @@ class MeshCoreConnector extends ChangeNotifier {
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
         trimmed.startsWith('V1|') ||
+        isVoxControlText(trimmed) ||
         OtpSyncService.looksLikeSyncMessage(trimmed) ||
         (isContactOtpEnabled(contact.publicKeyHex) &&
             OtpService.looksLikeCiphertextHex(trimmed));
@@ -11118,6 +11119,14 @@ class MeshCoreConnector extends ChangeNotifier {
     return text;
   }
 
+  /// Voice and photo announcements (VE3/VM1/VI1) and text fetch requests
+  /// (VR3) go out as they are: other apps and radios match them by their
+  /// prefix, so Smaz or Cyr2Lat would hide them (issue #150).
+  @visibleForTesting
+  static bool isVoxControlText(String text) =>
+      VoxVoiceEnvelope.looksLikeEnvelope(text) ||
+      VoxVoiceTextRequest.looksLikeRequest(text);
+
   String prepareChannelOutboundText(int channelIndex, String text) {
     final trimmed = text.trim();
     // See the comment in prepareContactOutboundText above — same reasoning,
@@ -11125,6 +11134,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final isStructuredPayload =
         trimmed.startsWith('g:') ||
         trimmed.startsWith('m:') ||
+        isVoxControlText(trimmed) ||
         OtpSyncService.looksLikeSyncMessage(trimmed) ||
         // z2-framed channel ciphertext (see OtpChannelOffsetService) isn't
         // pure hex any more (it has the offset + a pipe ahead of the hex),
