@@ -5638,6 +5638,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Quando si apre una chat con messaggi non letti, scorrete verso l\'alto fino al primo messaggio non letto, invece che al più recente.';
 
   @override
+  String get appSettings_keepScreenOn => 'Keep screen on';
+
+  @override
+  String get appSettings_keepScreenOnSubtitle =>
+      'Don\'t let the screen sleep or lock while the app is open. Uses more battery.';
+
+  @override
   String get appSettings_autoFetchRepeaterSettings =>
       'Recupera automaticamente le impostazioni del ripetitore';
 

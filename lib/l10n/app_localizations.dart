@@ -9590,6 +9590,18 @@ abstract class AppLocalizations {
   /// **'When opening a chat with unread messages, scroll to the first unread instead of the latest.'**
   String get appSettings_jumpToOldestUnreadSubtitle;
 
+  /// No description provided for @appSettings_keepScreenOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep screen on'**
+  String get appSettings_keepScreenOn;
+
+  /// No description provided for @appSettings_keepScreenOnSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t let the screen sleep or lock while the app is open. Uses more battery.'**
+  String get appSettings_keepScreenOnSubtitle;
+
   /// No description provided for @appSettings_autoFetchRepeaterSettings.
   ///
   /// In en, this message translates to:

@@ -5604,6 +5604,13 @@ class AppLocalizationsNl extends AppLocalizations {
       'Bij het openen van een chat met ongelezen berichten, scroll dan naar het eerste ongelezen bericht, in plaats van naar het meest recente.';
 
   @override
+  String get appSettings_keepScreenOn => 'Keep screen on';
+
+  @override
+  String get appSettings_keepScreenOnSubtitle =>
+      'Don\'t let the screen sleep or lock while the app is open. Uses more battery.';
+
+  @override
   String get appSettings_autoFetchRepeaterSettings =>
       'Repeaterinstellingen automatisch ophalen';
 

@@ -5584,6 +5584,13 @@ class AppLocalizationsSv extends AppLocalizations {
       'När du öppnar en chatt med oinlästa meddelanden, scrolla till det första oinlästa meddelandet istället för det senaste.';
 
   @override
+  String get appSettings_keepScreenOn => 'Keep screen on';
+
+  @override
+  String get appSettings_keepScreenOnSubtitle =>
+      'Don\'t let the screen sleep or lock while the app is open. Uses more battery.';
+
+  @override
   String get appSettings_autoFetchRepeaterSettings =>
       'Hämta repeaterinställningar automatiskt';
 

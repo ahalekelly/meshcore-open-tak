@@ -155,6 +155,10 @@ class AppSettings {
   /// Night vision: everything shown in dim red (Settings > App settings).
   final bool redLight;
 
+  /// Keep the screen from sleeping or locking while the app is open
+  /// (Android and iOS). Off by default.
+  final bool keepScreenOn;
+
   /// Themes the user made. Built-in presets live in [CustomTheme.presets].
   final List<CustomTheme> customThemes;
 
@@ -324,6 +328,7 @@ class AppSettings {
     this.channelMinHopsCountRepeaters = false,
     this.themeMode = 'system',
     this.redLight = false,
+    this.keepScreenOn = false,
     this.customThemes = const [],
     this.activeThemeId,
     this.holidayAnimationsEnabled = true,
@@ -429,6 +434,7 @@ class AppSettings {
       'channel_min_hops_count_repeaters': channelMinHopsCountRepeaters,
       'theme_mode': themeMode,
       'red_light': redLight,
+      'keep_screen_on': keepScreenOn,
       'custom_themes': customThemes.map((t) => t.toJson()).toList(),
       'active_theme_id': activeThemeId,
       'holiday_animations_enabled': holidayAnimationsEnabled,
@@ -599,6 +605,7 @@ class AppSettings {
           json['channel_min_hops_count_repeaters'] as bool? ?? false,
       themeMode: json['theme_mode'] as String? ?? 'system',
       redLight: json['red_light'] as bool? ?? false,
+      keepScreenOn: json['keep_screen_on'] as bool? ?? false,
       customThemes:
           (json['custom_themes'] as List<dynamic>?)
               ?.whereType<Map>()
@@ -763,6 +770,7 @@ class AppSettings {
     bool? channelMinHopsCountRepeaters,
     String? themeMode,
     bool? redLight,
+    bool? keepScreenOn,
     List<CustomTheme>? customThemes,
     Object? activeThemeId = _unset,
     bool? holidayAnimationsEnabled,
@@ -864,6 +872,7 @@ class AppSettings {
           channelMinHopsCountRepeaters ?? this.channelMinHopsCountRepeaters,
       themeMode: themeMode ?? this.themeMode,
       redLight: redLight ?? this.redLight,
+      keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       customThemes: customThemes ?? this.customThemes,
       activeThemeId: activeThemeId == _unset
           ? this.activeThemeId

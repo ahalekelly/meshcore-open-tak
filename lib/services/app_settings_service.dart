@@ -10,6 +10,7 @@ import '../models/translation_support.dart';
 
 export '../models/app_settings.dart' show ChannelNotificationMode;
 import '../storage/prefs_manager.dart';
+import 'screen_awake_service.dart';
 import '../utils/app_logger.dart';
 import '../helpers/cyr2lat.dart';
 
@@ -66,6 +67,7 @@ class AppSettingsService extends ChangeNotifier {
       Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
     }
     _syncDateTimer();
+    unawaited(ScreenAwakeService.instance.apply(_settings.keepScreenOn));
   }
 
   Future<void> updateSettings(AppSettings newSettings) async {
@@ -73,6 +75,7 @@ class AppSettingsService extends ChangeNotifier {
     Cyr2Lat.setCharMap(_settings.cyr2latCharMap);
     _lastAutoHolidayKey = autoHoliday?.occurrenceKey;
     _syncDateTimer();
+    unawaited(ScreenAwakeService.instance.apply(_settings.keepScreenOn));
     notifyListeners();
 
     final prefs = PrefsManager.instance;
@@ -475,6 +478,10 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setRedLight(bool value) async {
     await updateSettings(_settings.copyWith(redLight: value));
+  }
+
+  Future<void> setKeepScreenOn(bool value) async {
+    await updateSettings(_settings.copyWith(keepScreenOn: value));
   }
 
   Future<void> setLanguageOverride(String? value) async {

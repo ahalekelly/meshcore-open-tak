@@ -5378,6 +5378,13 @@ class AppLocalizationsKo extends AppLocalizations {
       '읽지 않은 메시지가 있는 채팅을 열 때, 최신 메시지 대신 첫 번째 읽지 않은 메시지로 스크롤합니다.';
 
   @override
+  String get appSettings_keepScreenOn => 'Keep screen on';
+
+  @override
+  String get appSettings_keepScreenOnSubtitle =>
+      'Don\'t let the screen sleep or lock while the app is open. Uses more battery.';
+
+  @override
   String get appSettings_autoFetchRepeaterSettings => '리피터 설정 자동 가져오기';
 
   @override

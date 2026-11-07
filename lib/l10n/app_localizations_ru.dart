@@ -5648,6 +5648,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'При открытии чата с непрочитанными сообщениями, прокрутите страницу, чтобы увидеть первое непрочитанное сообщение, а не последнее.';
 
   @override
+  String get appSettings_keepScreenOn => 'Keep screen on';
+
+  @override
+  String get appSettings_keepScreenOnSubtitle =>
+      'Don\'t let the screen sleep or lock while the app is open. Uses more battery.';
+
+  @override
   String get appSettings_autoFetchRepeaterSettings =>
       'Автозагрузка настроек репитера';
 

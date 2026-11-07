@@ -5238,6 +5238,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '在打开包含未读消息的聊天时，请滚动到第一个未读消息，而不是最新的消息。';
 
   @override
+  String get appSettings_keepScreenOn => 'Keep screen on';
+
+  @override
+  String get appSettings_keepScreenOnSubtitle =>
+      'Don\'t let the screen sleep or lock while the app is open. Uses more battery.';
+
+  @override
   String get appSettings_autoFetchRepeaterSettings => '自动获取转发节点设置';
 
   @override
