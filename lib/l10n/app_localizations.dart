@@ -11932,7 +11932,7 @@ abstract class AppLocalizations {
   /// No description provided for @mediaMesh_forceRouteHelp.
   ///
   /// In en, this message translates to:
-  /// **'Photo and voice transfers go through the repeaters you pick, in order, even when the other device is in direct range. On the device that downloads, both the request and the answer take this route; the other device needs nothing set.'**
+  /// **'Photos and voice you send in DMs, and those you download, go through the repeaters you pick, even when the other device is in direct range. The other device needs nothing set.'**
   String get mediaMesh_forceRouteHelp;
 
   /// No description provided for @mediaMesh_forceRouteOnVia.
