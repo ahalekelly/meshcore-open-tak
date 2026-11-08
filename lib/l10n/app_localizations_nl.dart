@@ -7061,6 +7061,26 @@ class AppLocalizationsNl extends AppLocalizations {
       'Everyone sharing photos must use the same radio2 settings. The radio switches between both frequencies, so heavy media traffic costs some main-mesh reception.';
 
   @override
+  String get mediaMesh_forceRoute => 'Send photos and voice through repeaters';
+
+  @override
+  String get mediaMesh_forceRouteHelp =>
+      'Photo and voice transfers go through the repeaters you pick, in order, even when the other device is in direct range. Turn it on on both devices.';
+
+  @override
+  String mediaMesh_forceRouteOnVia(String route) {
+    return 'On · via $route';
+  }
+
+  @override
+  String mediaMesh_forceRouteOffVia(String route) {
+    return 'Off · via $route';
+  }
+
+  @override
+  String get mediaMesh_forceRouteChoose => 'Choose repeaters';
+
+  @override
   String get mediaMesh_saved => 'radio2 settings saved';
 
   @override

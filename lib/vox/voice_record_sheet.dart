@@ -279,9 +279,7 @@ class _VoxRecordSheetState extends State<VoxRecordSheet> {
                 if (voice.forcedRoute != null)
                   Chip(
                     avatar: const Icon(Icons.alt_route, size: 16),
-                    label: Text(
-                      'Testing: forced via ${voice.forcedRouteLabel()}',
-                    ),
+                    label: Text('Through ${voice.forcedRouteLabel()}'),
                   ),
                 if (voice.preferMimi &&
                     !voice.mimi.isReady &&
