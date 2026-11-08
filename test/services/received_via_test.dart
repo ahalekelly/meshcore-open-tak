@@ -54,8 +54,10 @@ void main() {
     expect(VoxReceivedVia.fromMask(1), VoxReceivedVia.mainMesh);
     expect(VoxReceivedVia.fromMask(2), VoxReceivedVia.mediaMesh);
     expect(VoxReceivedVia.fromMask(3), VoxReceivedVia.both);
-    // Untagged (stock firmware, or Wadamesh without radio2): one radio, so
-    // the main mesh.
+    // Untagged from a radio that said it has no radio2 (stock firmware, or
+    // Wadamesh without radio2): one radio, so the main mesh.
+    VoxReceivedVia.connectedRadioHasRadio2 = false;
+    addTearDown(() => VoxReceivedVia.connectedRadioHasRadio2 = null);
     expect(VoxReceivedVia.forReceived(null), VoxReceivedVia.mainMesh);
     expect(VoxReceivedVia.forReceived(0), VoxReceivedVia.mainMesh);
     expect(VoxReceivedVia.forReceived(2), VoxReceivedVia.mediaMesh);

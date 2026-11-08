@@ -167,8 +167,8 @@ void main() {
     await tester.pump();
     expect(find.text('AI-reconstructed'), findsOneWidget);
     expect(find.textContaining('Fine detail is generated'), findsOneWidget);
-    // Untagged by the radio: one radio, so the main mesh.
-    expect(find.textContaining('main mesh'), findsOneWidget);
+    // Untagged, from a radio not (yet) known to have no radio2: no claim.
+    expect(find.textContaining('main mesh'), findsNothing);
   });
 
   testWidgets('receiving state shows the packet count', (tester) async {
