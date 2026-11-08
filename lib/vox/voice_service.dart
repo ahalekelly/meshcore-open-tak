@@ -74,18 +74,20 @@ enum VoxReceivedVia {
     _ => null,
   };
 
-  /// The connected radio has radio2 on (its last `get radio2` answer). Set
-  /// by [VoxVoiceService].
-  static bool connectedRadioHasRadio2 = false;
+  /// Whether the connected radio has radio2 on, from its last `get radio2`
+  /// answer: null until it has answered (or when it couldn't be asked).
+  /// Set by [VoxVoiceService].
+  static bool? connectedRadioHasRadio2;
 
   /// What to show for something this radio received, null for nothing.
   /// Wadamesh tags each frame with the radio it came in on. An untagged
-  /// frame from a radio without radio2 came over the main mesh; from one
-  /// with radio2 (keymindCascade doesn't tag frames) it could have come
-  /// either way, so nothing is claimed.
+  /// frame from a radio known to have no radio2 came over the main mesh;
+  /// from one with radio2 (keymindCascade doesn't tag frames, and Wadamesh
+  /// leaves the tag off when it lost track) or one that hasn't said, it
+  /// could have come either way, so nothing is claimed.
   static VoxReceivedVia? forReceived(int? mask) =>
       fromMask(mask) ??
-      (connectedRadioHasRadio2 ? null : VoxReceivedVia.mainMesh);
+      (connectedRadioHasRadio2 == false ? VoxReceivedVia.mainMesh : null);
 }
 
 class VoxClipState {
@@ -3401,10 +3403,12 @@ class VoxVoiceService extends ChangeNotifier {
     if (radio == null || fresh) {
       if (radio == null) {
         _mediaAir = null;
-        VoxReceivedVia.connectedRadioHasRadio2 = false;
+        VoxReceivedVia.connectedRadioHasRadio2 = null;
       }
       return Future.value();
     }
+    // Another radio: what the last one said about radio2 doesn't apply.
+    if (radio != _mediaAirRadio) VoxReceivedVia.connectedRadioHasRadio2 = null;
     return _mediaAirLoading ??= () async {
       MediaAirProfile? air;
       try {
@@ -3413,8 +3417,10 @@ class VoxVoiceService extends ChangeNotifier {
             final reply = await _connector
                 .runLocalCliCommand(c)
                 .timeout(const Duration(seconds: 4));
-            if (c == 'get radio2') {
-              final r2 = reply == null ? null : Radio2Reply.tryParse(reply);
+            if (c == 'get radio2' && reply != null) {
+              // Any answer counts: a profile, "off", or "Unknown command"
+              // (no radio2). No answer leaves it unknown.
+              final r2 = Radio2Reply.tryParse(reply);
               final had = VoxReceivedVia.connectedRadioHasRadio2;
               VoxReceivedVia.connectedRadioHasRadio2 = r2 != null && !r2.off;
               if (had != VoxReceivedVia.connectedRadioHasRadio2) {
