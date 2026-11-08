@@ -3354,8 +3354,7 @@ class VoxVoiceService extends ChangeNotifier {
     if (twice == null) return;
     // Second sends (see "lost answers"): the first packet of a relayed
     // answer, and any asked for again. Only salted (repeaters drop copies).
-    final relayed =
-        req.requesterPath == null || req.requesterPath!.isNotEmpty;
+    final relayed = req.requesterPath == null || req.requesterPath!.isNotEmpty;
     final again = !req.saltOk
         ? const <VoxVoicePacket>[]
         : [
