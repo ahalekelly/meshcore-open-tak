@@ -130,6 +130,18 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @appSettings_advertAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound and vibration for new nodes'**
+  String get appSettings_advertAlerts;
+
+  /// No description provided for @appSettings_advertAlertsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: new nodes show quietly. On a busy mesh they come all the time.'**
+  String get appSettings_advertAlertsSubtitle;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:

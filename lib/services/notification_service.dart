@@ -586,28 +586,34 @@ class NotificationService {
   }) async {
     if (!await _ensureCanNotify()) return;
 
-    const androidDetails = AndroidNotificationDetails(
+    // New nodes are shown quietly unless the user wants sound and vibration
+    // (_advertAlerts): on a busy mesh they come all the time. Silent is set
+    // per notification; the channel keeps its default importance so turning
+    // alerts back on still sounds.
+    final alert = _advertAlerts;
+    final androidDetails = AndroidNotificationDetails(
       'adverts',
       'Advertisements',
       channelDescription: 'New node advertisement notifications',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       icon: '@mipmap/ic_launcher',
+      silent: !alert,
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: alert,
     );
 
-    const macDetails = DarwinNotificationDetails(
+    final macDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: alert,
     );
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
       macOS: macDetails,
@@ -873,12 +879,18 @@ class NotificationService {
     } catch (_) {}
   }
 
+  /// Whether new-node notifications sound and vibrate (the latest
+  /// [showAdvertNotification]'s `alert`).
+  bool _advertAlerts = false;
+
   Future<void> showAdvertNotification({
     required String contactName,
     required String contactType,
     String? contactId,
+    bool alert = false,
   }) async {
     if (_suppressNotifications) return;
+    _advertAlerts = alert;
 
     _queueNotification(
       _PendingNotification(
@@ -1026,16 +1038,18 @@ class NotificationService {
         ' (${adverts.take(5).map((n) => _logSafe(n.body)).join(', ')}${adverts.length > 5 ? ', ...' : ''})';
     debugPrint('[Notification] batch summary: $summary$deviceInfo');
 
-    const androidDetails = AndroidNotificationDetails(
+    // Only new nodes are batched (adverts above): quiet the same way.
+    final androidDetails = AndroidNotificationDetails(
       'batch_summary',
       'Activity Summary',
       channelDescription: 'Batched notification summaries',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       icon: '@mipmap/ic_launcher',
+      silent: !_advertAlerts,
     );
 
-    const notificationDetails = NotificationDetails(android: androidDetails);
+    final notificationDetails = NotificationDetails(android: androidDetails);
 
     try {
       await _notifications.show(

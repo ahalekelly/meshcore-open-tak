@@ -9,6 +9,13 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get appSettings_advertAlerts => 'Sound and vibration for new nodes';
+
+  @override
+  String get appSettings_advertAlertsSubtitle =>
+      'Off: new nodes show quietly. On a busy mesh they come all the time.';
+
+  @override
   String get appTitle => 'MeshCore Open TAK';
 
   @override
