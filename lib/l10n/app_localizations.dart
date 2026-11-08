@@ -11926,7 +11926,7 @@ abstract class AppLocalizations {
   /// No description provided for @mediaMesh_forceRoute.
   ///
   /// In en, this message translates to:
-  /// **'Send photos and voice through repeaters'**
+  /// **'Send photos and voice through repeaters (for testing only)'**
   String get mediaMesh_forceRoute;
 
   /// No description provided for @mediaMesh_forceRouteHelp.

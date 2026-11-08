@@ -7091,7 +7091,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Everyone sharing photos must use the same radio2 settings. The radio switches between both frequencies, so heavy media traffic costs some main-mesh reception.';
 
   @override
-  String get mediaMesh_forceRoute => 'Send photos and voice through repeaters';
+  String get mediaMesh_forceRoute =>
+      'Send photos and voice through repeaters (for testing only)';
 
   @override
   String get mediaMesh_forceRouteHelp =>
