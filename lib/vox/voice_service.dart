@@ -3417,7 +3417,7 @@ class VoxVoiceService extends ChangeNotifier {
             final reply = await _connector
                 .runLocalCliCommand(c)
                 .timeout(const Duration(seconds: 4));
-            if (c == 'get radio2' && reply != null) {
+            if (c == 'get radio2') {
               // Any answer counts: a profile, "off", or "Unknown command"
               // (no radio2). No answer leaves it unknown.
               final r2 = Radio2Reply.tryParse(reply);
