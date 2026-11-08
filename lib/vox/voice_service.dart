@@ -638,6 +638,9 @@ class VoxVoiceService extends ChangeNotifier {
       );
       _autoPlay = prefs.getBool(_kAutoPlay) ?? true;
       _autoDownloadChannels = prefs.getBool(_kAutoChannels) ?? false;
+      _ownMimi
+        ..clear()
+        ..addAll(prefs.getStringList(_kOwnMimi) ?? const []);
       _pushChannelClips = prefs.getBool(_kPushChannel) ?? true;
       notifyListeners();
     } catch (_) {}
@@ -701,6 +704,18 @@ class VoxVoiceService extends ChangeNotifier {
   final Map<String, Uint8List> _bits = {};
   final Map<String, VoxVoiceMode> _modes = {};
   final Set<String> _ownClips = {};
+
+  /// Own Mimi clips, newest last, kept across restarts: a radio that can't
+  /// play Mimi may ask for a Codec2 copy of one ([voxCodec2CopySid]).
+  final List<String> _ownMimi = [];
+  static const _kOwnMimi = 'vox_own_mimi_clips';
+  static const _maxOwnMimi = 64;
+
+  /// Codec2 copies being made, by copy sid: who to answer once it's ready.
+  final Map<String, List<void Function()>> _copyWaiters = {};
+
+  /// Last time a packet of a session went out from here as a direct answer.
+  final Map<String, DateTime> _lastServed = {};
 
   final Map<String, _IncomingClip> _incoming = {};
 
@@ -1114,6 +1129,7 @@ class VoxVoiceService extends ChangeNotifier {
     final packets = voxPacketize(sid, clip.bits, clip.mode);
     if (packets.isEmpty) throw StateError('Recording is empty');
     _remember(sid, clip.mode, clip.bits, own: true);
+    if (clip.mode.isMimi) _noteOwnMimi(sid);
     return VoxVoiceEnvelope(
       sessionId: sid,
       mode: clip.mode,
@@ -2474,11 +2490,15 @@ class VoxVoiceService extends ChangeNotifier {
         if (self != null && req.requesterKey6 == voxKey6Hex(self)) {
           return; // our own request, heard back from a repeater
         }
-        if (channelIndex != null) {
-          _onChannelRequest(req, channelIndex, hops);
-        } else {
-          _queueServe(req, viaChannel: null);
+        void answer() {
+          if (channelIndex != null) {
+            _onChannelRequest(req, channelIndex, hops);
+          } else {
+            _queueServe(req, viaChannel: null);
+          }
         }
+
+        if (!_makeCodec2CopyFor(req, answer)) answer();
     }
   }
 
@@ -2496,7 +2516,10 @@ class VoxVoiceService extends ChangeNotifier {
           : 'VR3 DM request from ${req.requesterKey6}',
       req?.sessionId ?? '',
     );
-    if (req != null) _queueServe(req, viaChannel: null, waitForRoute: true);
+    if (req != null) {
+      void answer() => _queueServe(req, viaChannel: null, waitForRoute: true);
+      if (!_makeCodec2CopyFor(req, answer)) answer();
+    }
     return true; // never show VR3 control messages in the chat
   }
 
@@ -3152,6 +3175,133 @@ class VoxVoiceService extends ChangeNotifier {
         .catchError((_) {});
   }
 
+  // ------------------------------------------------- Codec2 copies of Mimi
+
+  void _noteOwnMimi(String sid) {
+    _ownMimi
+      ..remove(sid)
+      ..add(sid);
+    while (_ownMimi.length > _maxOwnMimi) {
+      _ownMimi.removeAt(0);
+    }
+    final keep = List<String>.of(_ownMimi);
+    unawaited(() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList(_kOwnMimi, keep);
+      } catch (_) {}
+    }());
+  }
+
+  /// The own Mimi clip [sid] is a Codec2 copy of, and the copy's length.
+  ({String mimi, int seconds})? _codec2CopyOf(String sid) {
+    for (final m in _ownMimi.reversed) {
+      final s = voxCodec2CopySeconds(sid, m);
+      if (s != null) return (mimi: m, seconds: s);
+    }
+    return null;
+  }
+
+  /// [req] asks for a Codec2 copy of one of our Mimi clips that isn't made
+  /// yet: it is made once any Mimi transfer of that clip has finished, and
+  /// then [answer] serves it like any other clip. False when [req] isn't
+  /// one (or the copy is already made: [answer] serves it now).
+  bool _makeCodec2CopyFor(VoxVoiceFetchRequest req, void Function() answer) {
+    final sid = req.sessionId;
+    if (_bits.containsKey(sid)) return false;
+    final of = _codec2CopyOf(sid);
+    if (of == null) return false;
+    final waiting = _copyWaiters[sid];
+    if (waiting != null) {
+      waiting.add(answer);
+      return true;
+    }
+    _copyWaiters[sid] = [answer];
+    _logEvent(
+      '${req.requesterKey6} asks for a Codec2 copy of Mimi clip '
+      '${of.mimi} (${of.seconds}s)',
+      sid,
+    );
+    _serveChain = _serveChain
+        .then((_) async {
+          var made = false;
+          try {
+            await _waitForMimiTransfer(of.mimi, sid);
+            made = await _makeCodec2Copy(of.mimi, sid, of.seconds);
+          } catch (e) {
+            _logEvent('Codec2 copy failed: $e', sid);
+          }
+          final answers = _copyWaiters.remove(sid) ?? const [];
+          if (made) {
+            for (final a in answers) {
+              a();
+            }
+          }
+        })
+        .catchError((_) {});
+    return true;
+  }
+
+  /// Until the Mimi clip [mimiSid] has gone quiet: no answer or channel
+  /// burst of it from here, and none heard on a channel, for a few seconds.
+  /// At most three minutes.
+  Future<void> _waitForMimiTransfer(String mimiSid, String copySid) async {
+    bool busy() {
+      final now = DateTime.now();
+      bool recent(DateTime? t) =>
+          t != null && now.difference(t) < const Duration(seconds: 4);
+      return recent(_lastServed[mimiSid]) ||
+          recent(_lastChannelPacket[mimiSid]) ||
+          _channelBursts.values.any((b) => b.sid == mimiSid);
+    }
+
+    if (!busy()) return;
+    _logEvent('Codec2 copy waits for the Mimi transfer to finish', copySid);
+    final until = DateTime.now().add(const Duration(minutes: 3));
+    while (busy() && DateTime.now().isBefore(until)) {
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+  }
+
+  /// Decodes the Mimi clip [mimiSid] and stores it again as Codec2
+  /// ([voxCodec2CopyMode]) under [copySid], exactly [seconds] long, so it
+  /// has the packet count the asker worked out ([voxCodec2CopyPackets]).
+  Future<bool> _makeCodec2Copy(
+    String mimiSid,
+    String copySid,
+    int seconds,
+  ) async {
+    if (!await _loadFromStore(mimiSid) || _modes[mimiSid]?.isMimi != true) {
+      _logEvent('no Codec2 copy: the Mimi clip is gone', copySid);
+      return false;
+    }
+    if (!mimi.isReady) {
+      _logEvent('no Codec2 copy: no Mimi model on this phone', copySid);
+      return false;
+    }
+    final audio = await mimi.decode(_bits[mimiSid]!);
+    const rate = VoxVoiceMode.sampleRateHz;
+    final pcm24 = voxFloatToPcm16(audio);
+    final factor = VoxMimiSpec.sampleRate ~/ rate;
+    final down = await compute(_decimateJob, (pcm24, factor));
+    final pcm = voxFloatToPcm16(down);
+    final n = seconds * rate;
+    final fit = Int16List(n)..setRange(0, min(pcm.length, n), pcm);
+    final job = _EncodeJob(fit, voxCodec2CopyMode);
+    final coded = await compute(_encodeJob, job);
+    final want = seconds * voxCodec2CopyMode.bytesPerSecond;
+    final bits = coded.length == want
+        ? coded
+        : (Uint8List(want)..setRange(0, min(coded.length, want), coded));
+    _remember(copySid, voxCodec2CopyMode, bits, own: true);
+    _logEvent(
+      'made a ${voxCodec2CopyPackets(seconds)}-packet Codec2 copy of '
+      '$mimiSid',
+      copySid,
+    );
+    return true;
+  }
+
   /// Longest raw-data path we accept from a request (keeps frames in size).
   static const int _maxRawPathBytes = 8;
 
@@ -3312,6 +3462,7 @@ class VoxVoiceService extends ChangeNotifier {
           ),
           waitForGenericAck: true,
         );
+        _lastServed[req.sessionId] = DateTime.now();
       } catch (e) {
         _logEvent('serve stopped at packet $i: $e', req.sessionId);
         return;

@@ -31,6 +31,33 @@ format, so other VE3 apps can exchange them.
 The recorder captures 48 kHz and decimates to 24 kHz (Mimi) or 8 kHz (Codec2).
 Voice settings has a toggle to keep sending Codec2 even with Mimi installed.
 
+### Codec2 copies for standalones
+
+A standalone (Wadamesh) can't play Mimi, so it asks the sender for a Codec2
+copy instead. It fetches a session id derived from the Mimi clip's:
+
+```
+copy sid = mimi sid XOR (0xC2C20000 | durS)
+```
+
+- **What the copy is.** Always Codec2 1200, exactly `durS` seconds long
+  (`durS` from the Mimi envelope), so both sides know it has
+  `ceil(durS * 150 / 156)` packets. No second envelope is sent.
+- **Sender.** The app keeps a list of its own Mimi clips across restarts.
+  The first time a copy is asked for, it decodes the Mimi clip, re-encodes it
+  and stores it under the copy's id. It then serves the copy like any other
+  clip, in the DM or on the channel.
+- **Waiting.** If the Mimi clip is being sent from this phone, or its packets
+  were heard on the channel in the last few seconds, the copy waits until that
+  goes quiet.
+- **Standalone.** In a DM it asks for the copy as soon as the Mimi message
+  arrives. On a channel it asks only when you tap **get as Codec2**, and keeps
+  a copy someone else asked for as it goes by. While the sender waits for a
+  Mimi transfer, the bubble says "Codec2 waiting for Mimi transfer to
+  finish".
+- **Older apps.** An app without this has no clip under that id and sends
+  nothing.
+
 ## Wire formats
 
 ### Envelope (normal text message, DM or channel)
