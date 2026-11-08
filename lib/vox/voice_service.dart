@@ -40,7 +40,6 @@ import 'image_codec.dart';
 import 'mimi.dart';
 import 'resample.dart';
 import 'voice_codec.dart';
-import 'voice_codec_choice.dart';
 import 'voice_dsp.dart';
 import 'vox_fec.dart';
 import 'vox_gaps.dart';
@@ -447,94 +446,16 @@ class VoxVoiceService extends ChangeNotifier {
   VoxVoiceMode get sendMode =>
       _preferMimi && mimi.isReady ? VoxVoiceMode.mimi : _codec2Mode;
 
-  // ----------------------------------- per-chat codec: Codec2 for radios
-
-  static const _kCodec2Targets = 'vox_codec2_targets';
-  static const _kMimiTargets = 'vox_mimi_targets';
-  static const _kCodecHeard = 'vox_codec_heard';
-  final VoxCodecChoice _codecs = VoxCodecChoice();
-
-  /// Key for a contact's per-chat voice settings.
-  static String contactTarget(Contact c) => 'c:${c.publicKeyHex}';
-
-  /// Key for a channel's per-chat voice settings.
+  /// Key for a channel's per-chat voice settings (push-to-talk).
   static String channelTarget(Channel ch) => 'ch:${ch.pskHex}';
 
-  /// Whether clips to [target] go out as Codec2, so radios that can't run Mimi
-  /// (Wadamesh on a T-Deck, say) can play them: switched on for the chat, or
-  /// chosen automatically from what the chat sends us ([autoCodec2]).
-  bool forcesCodec2(String? target) =>
-      _codecs.forcesCodec2(target, now: DateTime.now());
-
-  /// Codec2 because of what the chat sent: a contact whose latest clip was
-  /// Codec2, or a channel where someone sent Codec2 in the last two weeks.
-  bool autoCodec2(String? target) =>
-      _codecs.autoCodec2(target, now: DateTime.now());
-
-  /// The per-chat switch is on (rather than Codec2 being automatic).
-  bool manualCodec2(String? target) => _codecs.manualCodec2(target);
-
-  /// The switch was turned off against the automatic choice.
-  bool manualMimi(String? target) => _codecs.manualMimi(target);
-
-  Future<void> setForcesCodec2(String target, bool v) async {
-    if (!_codecs.setManual(target, v, now: DateTime.now())) return;
-    notifyListeners();
-    await _saveCodecChoices(heard: false);
-  }
-
-  Future<void> _saveCodecChoices({bool heard = true}) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(_kCodec2Targets, _codecs.manualCodec2Targets);
-      await prefs.setStringList(_kMimiTargets, _codecs.manualMimiTargets);
-      if (heard) await prefs.setString(_kCodecHeard, _codecs.heardJson());
-    } catch (_) {}
-  }
-
-  /// Notes which codec a chat's incoming clip used (see [VoxCodecChoice]).
-  void _learnCodec(
-    VoxVoiceEnvelope env, {
-    String? senderKeyHex,
-    int? channelIndex,
-    DateTime? at,
-  }) {
-    if (!env.mode.isAudio) return;
-    String? target;
-    if (channelIndex != null) {
-      for (final ch in _connector.channels) {
-        if (ch.index == channelIndex) {
-          target = channelTarget(ch);
-          break;
-        }
-      }
-    } else if (senderKeyHex != null && senderKeyHex.isNotEmpty) {
-      final c = contactByKeyHex(senderKeyHex);
-      target = c != null ? contactTarget(c) : 'c:$senderKeyHex';
-    }
-    if (target == null) return;
-    final now = DateTime.now();
-    final changed = _codecs.learn(
-      target,
-      mimi: env.mode.isMimi,
-      at: at != null && at.isBefore(now) ? at : now,
-      now: now,
-    );
-    if (changed) {
-      _logEvent(
-        forcesCodec2(target)
-            ? 'replies to this chat now go out as Codec2 (it sent Codec2)'
-            : 'replies to this chat go out as ${sendMode.label} again',
-        env.sessionId,
-      );
-      notifyListeners();
-    }
-    unawaited(_saveCodecChoices());
-  }
-
-  /// The codec the next recording to [target] will be sent with.
-  VoxVoiceMode sendModeFor(String? target) =>
-      forcesCodec2(target) ? _codec2Mode : sendMode;
+  // Per-chat codec choices, from before standalones could play Mimi (they
+  // now ask for a Codec2 copy): cleared on load.
+  static const _kOldCodecPrefs = [
+    'vox_codec2_targets',
+    'vox_mimi_targets',
+    'vox_codec_heard',
+  ];
 
   // ------------------------------------------- photos: VOX or AI sketch
 
@@ -631,11 +552,9 @@ class VoxVoiceService extends ChangeNotifier {
           : voxDefaultVoiceMode;
       _photoAiSketch = prefs.getBool(_kPhotoAiSketch) ?? false;
       _photoAiSketchHd = prefs.getBool(_kPhotoAiSketchHd) ?? false;
-      _codecs.load(
-        codec2: prefs.getStringList(_kCodec2Targets),
-        mimi: prefs.getStringList(_kMimiTargets),
-        heardJson: prefs.getString(_kCodecHeard),
-      );
+      for (final k in _kOldCodecPrefs) {
+        await prefs.remove(k);
+      }
       _autoPlay = prefs.getBool(_kAutoPlay) ?? true;
       _autoDownloadChannels = prefs.getBool(_kAutoChannels) ?? false;
       _ownMimi
@@ -975,18 +894,14 @@ class VoxVoiceService extends ChangeNotifier {
 
   // ---------------------------------------------------------------- sending
 
-  /// Encodes a 48 kHz recording with [sendModeFor] [target] (Mimi or
-  /// Codec2).
-  Future<VoxEncodedClip> encodeRecording(
-    Int16List pcm48k, {
-    String? target,
-  }) async {
+  /// Encodes a 48 kHz recording with [sendMode] (Mimi or Codec2).
+  Future<VoxEncodedClip> encodeRecording(Int16List pcm48k) async {
     final maxIn = maxClipLength.inMilliseconds * voxRecordSampleRate ~/ 1000;
     final clipped = pcm48k.length > maxIn
         ? Int16List.sublistView(pcm48k, 0, maxIn)
         : pcm48k;
     final seconds = max(1, (clipped.length / voxRecordSampleRate).ceil());
-    final mode = sendModeFor(target);
+    final mode = sendMode;
     if (mode.isMimi) {
       final audio24 = await compute(_decimateJob, (clipped, 2));
       final bits = await mimi.encode(audio24);
@@ -2157,12 +2072,6 @@ class VoxVoiceService extends ChangeNotifier {
   }) {
     final env = VoxVoiceEnvelope.tryParse(text);
     if (env == null) return;
-    _learnCodec(
-      env,
-      senderKeyHex: senderKeyHex,
-      channelIndex: channelIndex,
-      at: timestamp,
-    );
     final sid = env.sessionId;
     // Don't auto-play a backlog synced from the radio after a reconnect.
     if (timestamp != null &&

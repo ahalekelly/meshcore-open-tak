@@ -2901,7 +2901,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         visible: context.select<VoxVoiceService, bool>((v) => v.isAvailable),
         child: VoxMicButton(
           recipientLabel: widget.channel.name,
-          codecTarget: VoxVoiceService.channelTarget(widget.channel),
           caption: caption,
           onSend: (clip, text) => context
               .read<VoxVoiceService>()
