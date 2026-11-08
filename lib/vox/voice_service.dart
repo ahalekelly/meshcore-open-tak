@@ -726,6 +726,11 @@ class VoxVoiceService extends ChangeNotifier {
   /// Last time any channel packet for a session was heard (serve dedupe).
   final Map<String, DateTime> _lastChannelPacket = {};
   final Map<String, DateTime> _recentServes = {};
+
+  /// What each listener asked of each clip in the last ten minutes
+  /// ('sid/requester'): packets asked again are sent twice, and a listener
+  /// that keeps asking is answered at most once a minute (_noteAsk).
+  final Map<String, _Asks> _asks = {};
   final Map<String, int> _serveGen = {};
   final Random _rng = Random();
 
@@ -2819,6 +2824,59 @@ class VoxVoiceService extends ChangeNotifier {
     }());
   }
 
+  // ------------------------------------------------- lost answers
+  //
+  // An answer's first packet goes out while the request's flood may still
+  // be relayed around the listener, and is the one most often lost: a lone
+  // packet asked for again and again never arrived (a 1-packet clip's #0,
+  // asked nine times from 3 hops). So the first packet of a relayed answer
+  // goes once more at its end, and a packet a listener asks for again goes
+  // twice. Each costs one packet's gap; each saves a round of asking
+  // (20-60 s with the listener's backoff).
+
+  /// Most re-asked packets sent twice in one answer: a big re-ask (most of
+  /// a photo again) goes once.
+  static const int _maxSentTwice = 4;
+
+  /// Asks after which a listener is answered at most every [_slowAnswerGap].
+  static const int _askLimit = 4;
+  static const Duration _slowAnswerGap = Duration(minutes: 1);
+
+  /// Notes [req], for a clip of [total] packets. Returns the packets to send
+  /// twice (asked for again), or null when this listener has asked more
+  /// than [_askLimit] times and was answered less than [_slowAnswerGap] ago:
+  /// its answers keep getting lost, and the channel is everyone's.
+  Set<int>? _noteAsk(VoxVoiceFetchRequest req, int total) {
+    final now = DateTime.now();
+    _asks.removeWhere(
+      (_, a) => now.difference(a.since) > const Duration(minutes: 10),
+    );
+    final a = _asks.putIfAbsent(
+      '${req.sessionId}/${req.requesterKey6}',
+      () => _Asks(now),
+    );
+    final wanted = req.missingIndices ?? List<int>.generate(total, (i) => i);
+    final again = {
+      for (final i in wanted)
+        if (a.indices.contains(i)) i,
+    };
+    a.indices.addAll(wanted);
+    a.count++;
+    final last = a.answeredAt;
+    if (a.count > _askLimit &&
+        last != null &&
+        now.difference(last) < _slowAnswerGap) {
+      _logEvent(
+        '${req.requesterKey6} has asked ${a.count} times: answering it at '
+        'most once a minute',
+        req.sessionId,
+      );
+      return null;
+    }
+    a.answeredAt = now;
+    return again.length <= _maxSentTwice ? again : <int>{};
+  }
+
   // ------------------------------------------------- channel bursts
   //
   // One burst per clip per channel, whoever asks. Every listener's request
@@ -2869,6 +2927,8 @@ class VoxVoiceService extends ChangeNotifier {
     final held = _heldPackets(req.sessionId);
     if (held == null) return;
     final total = held.total;
+    final twice = _noteAsk(req, total);
+    if (twice == null) return;
     final burst = _channelBursts.putIfAbsent(
       key,
       () => _ChannelBurst(req.sessionId, channel),
@@ -2884,6 +2944,7 @@ class VoxVoiceService extends ChangeNotifier {
     if (req.missingIndices == null && held.whole) {
       burst.addParity(total, image: held.image);
     }
+    burst.sendTwice.addAll(twice);
     burst.saltOk = burst.saltOk && req.saltOk;
     burst.markOk = burst.markOk && req.markOk;
     burst.maxHops = max(burst.maxHops, hops ?? 3);
@@ -2984,9 +3045,27 @@ class VoxVoiceService extends ChangeNotifier {
       final sentData = <int>[];
       var zeroHopSent = 0;
       var paritySent = 0;
-      while (burst.pending.isNotEmpty && _connector.isConnected) {
-        final index = burst.pending.first;
-        burst.pending.remove(index);
+      // Second sends (see "lost answers"), after everything else. Only with
+      // salt: an unsalted copy is the same packet, which repeaters drop.
+      final again = <int>[];
+      var repeatFirst = burst.saltOk && !burst.pushing && burst.maxHops > 0;
+      var repeats = 0;
+      while ((burst.pending.isNotEmpty || again.isNotEmpty) &&
+          _connector.isConnected) {
+        final int index;
+        if (burst.pending.isNotEmpty) {
+          index = burst.pending.first;
+          burst.pending.remove(index);
+          if (index < _ChannelBurst.parityBase &&
+              burst.saltOk &&
+              (repeatFirst || burst.sendTwice.remove(index))) {
+            repeatFirst = false;
+            if (!again.contains(index)) again.add(index);
+          }
+        } else {
+          index = again.removeAt(0);
+          repeats++;
+        }
         Uint8List payload;
         if (index >= _ChannelBurst.parityBase) {
           if (!held.whole) continue;
@@ -3014,7 +3093,7 @@ class VoxVoiceService extends ChangeNotifier {
                     : mark
                     ? _nextMarkSend(burst.sid, index)
                     : _rng.nextInt(256),
-                left: mark ? burst.pending.length : null,
+                left: mark ? burst.pending.length + again.length : null,
               );
           if (mark) markedSent++;
         }
@@ -3033,10 +3112,13 @@ class VoxVoiceService extends ChangeNotifier {
           return;
         }
         sent++;
-        if (index < _ChannelBurst.parityBase) sentData.add(index);
+        // Each packet once, for the pace's loss count.
+        if (index < _ChannelBurst.parityBase && !sentData.contains(index)) {
+          sentData.add(index);
+        }
         if (zeroHop) zeroHopSent++;
         _lastChannelPacket[burst.sid] = DateTime.now();
-        if (burst.pending.isNotEmpty) {
+        if (burst.pending.isNotEmpty || again.isNotEmpty) {
           await Future<void>.delayed(
             zeroHop
                 ? _zeroHopGap()
@@ -3044,9 +3126,11 @@ class VoxVoiceService extends ChangeNotifier {
           );
         }
       }
+      burst.sendTwice.clear();
       _logEvent(
         'sent $sent packets on channel ${burst.channel}'
         '${paritySent > 0 ? ', $paritySent of them parity' : ''}'
+        '${repeats > 0 ? ', $repeats sent twice' : ''}'
         '${zeroHopSent > 0 ? ' ($zeroHopSent zero-hop)' : ''}'
         '${burst.suppressed > 0 ? '; ${burst.suppressed} left out, heard from another node' : ''}'
         '${zeroHopSent < sent ? ', ${pace.gapMs(burst.maxHops)} ms apart after ${burst.pushing ? 0 : pace.settleMs(burst.maxHops)} ms' : ''}'
@@ -3356,6 +3440,28 @@ class VoxVoiceService extends ChangeNotifier {
         _logEvent('another node is answering: not sending', req.sessionId);
       }
       return;
+    }
+    final twice = _noteAsk(req, held.total);
+    if (twice == null) return;
+    // Second sends (see "lost answers"): the first packet of a relayed
+    // answer, and any asked for again. Only salted (repeaters drop copies).
+    final relayed =
+        req.requesterPath == null || req.requesterPath!.isNotEmpty;
+    final again = !req.saltOk
+        ? const <VoxVoicePacket>[]
+        : [
+            for (final p in packets)
+              if ((relayed && identical(p, packets.first)) ||
+                  twice.contains(p.index))
+                p,
+          ];
+    packets.addAll(again);
+    if (again.isNotEmpty) {
+      _logEvent(
+        '${again.length} of them sent twice: '
+        '${_indexList([for (final p in again) p.index])}',
+        req.sessionId,
+      );
     }
     if (!held.whole) {
       _logEvent(
@@ -4088,6 +4194,15 @@ VoxRgbImage? _decodeImageJob(Uint8List payload) {
   return voxDecodeImagePayload(payload, (obus) => av1.decode(obus));
 }
 
+/// One listener's asks for one clip (VoiceService._noteAsk).
+class _Asks {
+  _Asks(this.since);
+  final DateTime since;
+  final Set<int> indices = {};
+  int count = 0;
+  DateTime? answeredAt;
+}
+
 /// A channel burst in progress (VoiceService._queueChannelBurst).
 class _ChannelBurst {
   _ChannelBurst(this.sid, this.channel);
@@ -4109,6 +4224,9 @@ class _ChannelBurst {
 
   /// Packets taken off [pending] because another node sent them.
   int suppressed = 0;
+
+  /// Data packets a listener asked for again: sent twice (_noteAsk).
+  final Set<int> sendTwice = {};
 
   /// [pending] holds data packet indices, and parity packet k as
   /// parityBase + k (vox_fec.dart), sent after all the data.
