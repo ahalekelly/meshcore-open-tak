@@ -794,6 +794,10 @@ class MeshCoreConnector extends ChangeNotifier {
   bool get isAutoReconnectScheduled =>
       (_shouldAutoReconnect || _shouldAutoReconnectTcp) &&
       (_reconnectTimer?.isActive ?? false);
+
+  /// Reconnects scheduled since the link was last up (each backoff step).
+  @visibleForTesting
+  int get reconnectAttempts => _reconnectAttempts;
   String? get activeTcpEndpoint => _tcpConnector.activeEndpoint;
   bool get isTcpTransportConnected =>
       _state == MeshCoreConnectionState.connected &&

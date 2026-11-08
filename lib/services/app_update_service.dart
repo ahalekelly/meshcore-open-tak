@@ -171,6 +171,16 @@ class AppUpdateService extends ChangeNotifier {
   Timer? _timer;
   bool _started = false;
 
+  /// CI replaces the release's files one by one, a few minutes per build: a
+  /// check in that window finds the new build without this platform's file.
+  /// That is taken as "still publishing" and checked again every
+  /// [_publishRecheck], up to [_publishRechecks] times, before the update is
+  /// offered as a download page.
+  static const _publishRecheck = Duration(minutes: 2);
+  static const _publishRechecks = 10;
+  int _publishWaits = 0;
+  Timer? _publishTimer;
+
   /// The platform key in [appUpdateAssetNames], or null where updates are
   /// not offered (web, iOS).
   static String? get platform {
@@ -284,12 +294,21 @@ class AppUpdateService extends ChangeNotifier {
         _prefLastCheck,
         DateTime.now().millisecondsSinceEpoch,
       );
+      final newer = latest != null && latest.isNewerThan(_installedBuild);
+      if (newer &&
+          latest.downloadUrl == null &&
+          !needsManualDownload &&
+          _publishWaits < _publishRechecks) {
+        // The build is there but not its file yet: not offered until it is.
+        _publishWaits++;
+        _publishTimer?.cancel();
+        _publishTimer = Timer(_publishRecheck, check);
+        _set(AppUpdateStatus.upToDate);
+        return;
+      }
+      _publishWaits = 0;
       _latest = latest;
-      _set(
-        latest != null && latest.isNewerThan(_installedBuild)
-            ? AppUpdateStatus.available
-            : AppUpdateStatus.upToDate,
-      );
+      _set(newer ? AppUpdateStatus.available : AppUpdateStatus.upToDate);
     } catch (e) {
       _fail(AppUpdateStatus.idle, '$e');
     }
@@ -506,6 +525,7 @@ class AppUpdateService extends ChangeNotifier {
   @override
   void dispose() {
     _timer?.cancel();
+    _publishTimer?.cancel();
     super.dispose();
   }
 }

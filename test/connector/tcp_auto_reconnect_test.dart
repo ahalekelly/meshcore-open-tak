@@ -208,16 +208,16 @@ void main() {
             _connector.state == MeshCoreConnectionState.disconnected &&
             _connector.isAutoReconnectScheduled,
       );
-      await _waitFor(
-        () => !_connector.isAutoReconnectScheduled,
-        pollInterval: const Duration(milliseconds: 1),
-      );
-      // The timer firing proves an attempt started; wait for its failure to
-      // finish and the next backoff to become active.
+      // An attempt runs and fails, and the next backoff step is scheduled:
+      // the count goes up. (Watching for the moment no timer is scheduled
+      // missed it: on loopback a refused connect fails within a millisecond.)
+      final first = _connector.reconnectAttempts;
       await _waitFor(
         () =>
+            _connector.reconnectAttempts > first &&
             _connector.state == MeshCoreConnectionState.disconnected &&
             _connector.isAutoReconnectScheduled,
+        seconds: 20,
       );
       expect(_connector.isTcpTransportConnected, isFalse);
     },
