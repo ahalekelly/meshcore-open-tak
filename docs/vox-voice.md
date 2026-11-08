@@ -99,6 +99,17 @@ is 162 bytes on the raw-data plane.
      data (v1.15+).
 - **Pacing.** Direct packets are about 2× a packet's airtime apart, and channel
   packets about 4× (min 400 ms / 800 ms), based on the radio's current SF/BW/CR.
+- **Lost answers.** The first packet of an answer goes out while the request
+  may still be relayed around the listener, and is the one most often lost.
+  So the sender adds a second copy (salted, so repeaters don't drop it) in
+  these cases:
+  - the first packet of every relayed answer, sent again at the end;
+  - a packet the same listener asks for again, sent twice (at most 4 such
+    packets per answer).
+  - **Why it pays:** each copy costs one packet gap, while a lost packet costs a
+    round of asking again.
+  - **Slowing down:** after 4 asks for the same clip within 10 minutes, a
+    listener is answered at most once a minute.
 - **Playback.** One shared player. While a clip decodes (Mimi takes a few
   seconds) the button shows a spinning accent-coloured ring; while it plays
   the ring fills with progress around a stop button. Completed clips are
