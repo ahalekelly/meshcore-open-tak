@@ -648,6 +648,57 @@ List<VoxVoicePacket> voxPacketize(
   return packets;
 }
 
+// ------------------------------------------------- Codec2 copies of Mimi
+//
+// A radio that can't play Mimi (Wadamesh on a T-Deck) asks the sender for a
+// Codec2 copy by fetching a session id made from the Mimi clip's:
+//
+//     copy sid = mimi sid XOR (0xC2C20000 | seconds)
+//
+// `seconds` is the Mimi envelope's duration. The copy is always Codec2 1200
+// and exactly that many seconds long, so both sides know its packet count
+// ([voxCodec2CopyPackets]) without a second envelope. The sender, which
+// still has the Mimi clip, decodes and re-encodes it when first asked and
+// then serves it like any other clip; a sender that doesn't know about
+// copies just doesn't have that session, and nothing is sent.
+
+/// The high half of the XOR that makes a copy's session id.
+const int voxCodec2CopyTag = 0xC2C20000;
+
+/// The Codec2 mode every copy is in.
+const VoxVoiceMode voxCodec2CopyMode = VoxVoiceMode.mode1200;
+
+/// Longest copy: [voxMaxPackets] packets of [voxCodec2CopyMode].
+final int voxCodec2CopyMaxSeconds =
+    voxMaxPackets *
+    voxCodec2CopyMode.bytesPerPacket ~/
+    voxCodec2CopyMode.bytesPerSecond;
+
+/// The copy's session id for a Mimi clip [mimiSid] of [seconds] seconds
+/// (at least 1).
+String voxCodec2CopySid(String mimiSid, int seconds) {
+  final s = seconds.clamp(1, 0xFFFF);
+  return voxSessionIdFromInt(
+    int.parse(mimiSid, radix: 16) ^ voxCodec2CopyTag ^ s,
+  );
+}
+
+/// The seconds [copySid] was made with, when it is a copy of [mimiSid];
+/// null otherwise.
+int? voxCodec2CopySeconds(String copySid, String mimiSid) {
+  final x = int.parse(copySid, radix: 16) ^ int.parse(mimiSid, radix: 16);
+  if ((x & 0xFFFF0000) != voxCodec2CopyTag) return null;
+  final s = x & 0xFFFF;
+  return s >= 1 && s <= voxCodec2CopyMaxSeconds ? s : null;
+}
+
+/// Packets in a copy of [seconds] seconds.
+int voxCodec2CopyPackets(int seconds) {
+  final bytes = seconds.clamp(1, 0xFFFF) * voxCodec2CopyMode.bytesPerSecond;
+  final per = voxCodec2CopyMode.bytesPerPacket;
+  return (bytes + per - 1) ~/ per;
+}
+
 /// Rough LoRa airtime for the whole clip, used for the "~N s on air" hint.
 Duration voxEstimateAirtime({
   required int totalPackets,
