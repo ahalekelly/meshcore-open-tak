@@ -296,7 +296,7 @@ class AppUpdateService extends ChangeNotifier {
       );
       final newer = latest != null && latest.isNewerThan(_installedBuild);
       if (newer &&
-          latest!.downloadUrl == null &&
+          latest.downloadUrl == null &&
           !needsManualDownload &&
           _publishWaits < _publishRechecks) {
         // The build is there but not its file yet: not offered until it is.
