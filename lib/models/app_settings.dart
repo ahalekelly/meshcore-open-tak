@@ -135,6 +135,9 @@ class AppSettings {
   final bool notifyOnNewMessage;
   final bool notifyOnNewChannelMessage;
   final bool notifyOnNewAdvert;
+
+  /// New-node notifications sound and vibrate. Off: they show quietly.
+  final bool notifyAdvertAlerts;
   final bool autoSendZeroHopAdvertOnGpsUpdate;
   final int gpsIntervalSeconds;
   final bool autoRouteRotationEnabled;
@@ -314,6 +317,7 @@ class AppSettings {
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
     this.notifyOnNewAdvert = true,
+    this.notifyAdvertAlerts = false,
     this.autoSendZeroHopAdvertOnGpsUpdate = false,
     this.gpsIntervalSeconds = 900,
     this.autoRouteRotationEnabled = true,
@@ -419,6 +423,7 @@ class AppSettings {
       'notify_on_new_message': notifyOnNewMessage,
       'notify_on_new_channel_message': notifyOnNewChannelMessage,
       'notify_on_new_advert': notifyOnNewAdvert,
+      'notify_advert_alerts': notifyAdvertAlerts,
       'auto_send_zero_hop_advert_on_gps_update':
           autoSendZeroHopAdvertOnGpsUpdate,
       'gps_interval_seconds': gpsIntervalSeconds,
@@ -584,6 +589,7 @@ class AppSettings {
       notifyOnNewChannelMessage:
           json['notify_on_new_channel_message'] as bool? ?? true,
       notifyOnNewAdvert: json['notify_on_new_advert'] as bool? ?? true,
+      notifyAdvertAlerts: json['notify_advert_alerts'] as bool? ?? false,
       autoSendZeroHopAdvertOnGpsUpdate:
           json['auto_send_zero_hop_advert_on_gps_update'] as bool? ?? false,
       gpsIntervalSeconds:
@@ -756,6 +762,7 @@ class AppSettings {
     bool? notifyOnNewMessage,
     bool? notifyOnNewChannelMessage,
     bool? notifyOnNewAdvert,
+    bool? notifyAdvertAlerts,
     bool? autoSendZeroHopAdvertOnGpsUpdate,
     int? gpsIntervalSeconds,
     bool? autoRouteRotationEnabled,
@@ -850,6 +857,7 @@ class AppSettings {
       notifyOnNewChannelMessage:
           notifyOnNewChannelMessage ?? this.notifyOnNewChannelMessage,
       notifyOnNewAdvert: notifyOnNewAdvert ?? this.notifyOnNewAdvert,
+      notifyAdvertAlerts: notifyAdvertAlerts ?? this.notifyAdvertAlerts,
       autoSendZeroHopAdvertOnGpsUpdate:
           autoSendZeroHopAdvertOnGpsUpdate ??
           this.autoSendZeroHopAdvertOnGpsUpdate,

@@ -10484,6 +10484,7 @@ class MeshCoreConnector extends ChangeNotifier {
             contactName: contact.name,
             contactType: contact.typeLabelRaw,
             contactId: contact.publicKeyHex,
+            alert: settings.notifyAdvertAlerts,
           );
         }
       }
@@ -10557,6 +10558,7 @@ class MeshCoreConnector extends ChangeNotifier {
           contactName: contact.name,
           contactType: contact.typeLabelRaw,
           contactId: contact.publicKeyHex,
+          alert: settings.notifyAdvertAlerts,
         );
       }
     }
@@ -13320,6 +13322,7 @@ class MeshCoreConnector extends ChangeNotifier {
           contactName: contact.name,
           contactType: contact.typeLabelRaw,
           contactId: contact.publicKeyHex,
+          alert: settings.notifyAdvertAlerts,
         );
       }
     }

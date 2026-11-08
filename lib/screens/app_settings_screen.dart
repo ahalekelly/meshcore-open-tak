@@ -431,6 +431,34 @@ class AppSettingsScreen extends StatelessWidget {
               ? (value) => settingsService.setNotifyOnNewAdvert(value)
               : null,
         ),
+        Builder(
+          builder: (context) {
+            final on =
+                notifEnabled && settingsService.settings.notifyOnNewAdvert;
+            final disabled = Theme.of(context).disabledColor;
+            return SwitchListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
+              secondary: Icon(
+                Icons.vibration,
+                size: 24,
+                color: on ? null : disabled,
+              ),
+              title: Text(
+                context.l10n.appSettings_advertAlerts,
+                style: TextStyle(color: on ? null : disabled),
+              ),
+              subtitle: Text(
+                context.l10n.appSettings_advertAlertsSubtitle,
+                style: TextStyle(color: on ? null : disabled),
+              ),
+              value: settingsService.settings.notifyAdvertAlerts,
+              onChanged: on ? settingsService.setNotifyAdvertAlerts : null,
+            );
+          },
+        ),
       ],
     );
   }
