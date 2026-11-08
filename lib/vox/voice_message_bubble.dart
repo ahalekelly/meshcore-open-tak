@@ -794,10 +794,16 @@ class VoxAutoPlayTile extends StatelessWidget {
   }
 }
 
-/// Testing toggle: force voice raw data through chosen repeaters.
+/// Sends photo and voice transfers through chosen repeaters. Shown in
+/// MediaMesh Settings and on the voice diagnostics sheet.
 class VoxForcedRouteTile extends StatelessWidget {
   final VoxVoiceService service;
-  const VoxForcedRouteTile({super.key, required this.service});
+  final EdgeInsetsGeometry? contentPadding;
+  const VoxForcedRouteTile({
+    super.key,
+    required this.service,
+    this.contentPadding,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -806,15 +812,16 @@ class VoxForcedRouteTile extends StatelessWidget {
       builder: (context, _) {
         final keys = service.forcedRepeaterKeys;
         final on = service.forceRepeaterRoute && keys.isNotEmpty;
+        final l10n = context.l10n;
+        final route = service.forcedRouteLabel();
+        final state = on
+            ? l10n.mediaMesh_forceRouteOnVia(route)
+            : l10n.mediaMesh_forceRouteOffVia(route);
+        final help = l10n.mediaMesh_forceRouteHelp;
         return SwitchListTile(
-          title: const Text('Force voice through repeaters'),
-          subtitle: Text(
-            keys.isEmpty
-                ? 'Testing only. Pick repeaters to route voice through, even '
-                      'when the other device is in direct range.'
-                : '${on ? 'On' : 'Off'} · via ${service.forcedRouteLabel()}'
-                      ' · tap to change. Enable on both devices.',
-          ),
+          contentPadding: contentPadding,
+          title: Text(l10n.mediaMesh_forceRoute),
+          subtitle: Text(keys.isEmpty ? help : '$state\n$help'),
           value: on,
           onChanged: (v) async {
             if (v && keys.isEmpty) {
@@ -828,7 +835,7 @@ class VoxForcedRouteTile extends StatelessWidget {
           },
           secondary: IconButton(
             icon: const Icon(Icons.alt_route),
-            tooltip: 'Choose repeaters',
+            tooltip: context.l10n.mediaMesh_forceRouteChoose,
             onPressed: () async {
               final picked = await pickVoxRepeaters(context, service);
               if (picked != null) {

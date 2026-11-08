@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -11,6 +12,8 @@ import '../screens/radio_console_screen.dart';
 import '../services/media_lockdown.dart';
 import '../services/media_mesh.dart';
 import '../services/media_mesh_find.dart';
+import '../vox/voice_message_bubble.dart' show VoxForcedRouteTile;
+import '../vox/voice_service.dart';
 import 'mediamesh_coverage_tile.dart';
 
 /// MediaMesh Settings: the connected radio's second LoRa profile (`radio2`),
@@ -634,6 +637,13 @@ class _MediaMeshSettingsDialogState extends State<MediaMeshSettingsDialog> {
         const SizedBox(height: 16),
         // Where the MediaMesh repeaters reach, as you move.
         const MediaMeshCoverageTile(),
+        const SizedBox(height: 8),
+        // Photo and voice transfers through chosen repeaters (also on the
+        // voice diagnostics sheet).
+        VoxForcedRouteTile(
+          service: context.read<VoxVoiceService>(),
+          contentPadding: EdgeInsets.zero,
+        ),
         const SizedBox(height: 16),
         DropdownButtonFormField<LoRaBandwidth>(
           key: ValueKey('bw-${_settings.bandwidth.name}'),

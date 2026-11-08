@@ -11923,6 +11923,36 @@ abstract class AppLocalizations {
   /// **'Everyone sharing photos must use the same radio2 settings. The radio switches between both frequencies, so heavy media traffic costs some main-mesh reception.'**
   String get mediaMesh_footer;
 
+  /// No description provided for @mediaMesh_forceRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Send photos and voice through repeaters (for testing only)'**
+  String get mediaMesh_forceRoute;
+
+  /// No description provided for @mediaMesh_forceRouteHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and voice you send in DMs, and those you download, go through the repeaters you pick, even when the other device is in direct range. The other device needs nothing set.'**
+  String get mediaMesh_forceRouteHelp;
+
+  /// No description provided for @mediaMesh_forceRouteOnVia.
+  ///
+  /// In en, this message translates to:
+  /// **'On · via {route}'**
+  String mediaMesh_forceRouteOnVia(String route);
+
+  /// No description provided for @mediaMesh_forceRouteOffVia.
+  ///
+  /// In en, this message translates to:
+  /// **'Off · via {route}'**
+  String mediaMesh_forceRouteOffVia(String route);
+
+  /// No description provided for @mediaMesh_forceRouteChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose repeaters'**
+  String get mediaMesh_forceRouteChoose;
+
   /// No description provided for @mediaMesh_saved.
   ///
   /// In en, this message translates to:
