@@ -586,25 +586,29 @@ class NotificationService {
   }) async {
     if (!await _ensureCanNotify()) return;
 
+    // New nodes are shown, never sounded or vibrated: on a busy mesh they
+    // come all the time. (silent is per notification, so it also applies on
+    // phones where the channel was made before.)
     const androidDetails = AndroidNotificationDetails(
       'adverts',
       'Advertisements',
       channelDescription: 'New node advertisement notifications',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      importance: Importance.low,
+      priority: Priority.low,
       icon: '@mipmap/ic_launcher',
+      silent: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: false,
     );
 
     const macDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: false,
     );
 
     const notificationDetails = NotificationDetails(
@@ -1026,13 +1030,15 @@ class NotificationService {
         ' (${adverts.take(5).map((n) => _logSafe(n.body)).join(', ')}${adverts.length > 5 ? ', ...' : ''})';
     debugPrint('[Notification] batch summary: $summary$deviceInfo');
 
+    // Only new nodes are batched (adverts above): silent too.
     const androidDetails = AndroidNotificationDetails(
       'batch_summary',
       'Activity Summary',
       channelDescription: 'Batched notification summaries',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      importance: Importance.low,
+      priority: Priority.low,
       icon: '@mipmap/ic_launcher',
+      silent: true,
     );
 
     const notificationDetails = NotificationDetails(android: androidDetails);
