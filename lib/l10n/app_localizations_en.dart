@@ -7004,7 +7004,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaMesh_forceRouteHelp =>
-      'Photo and voice transfers go through the repeaters you pick, in order, even when the other device is in direct range. Turn it on on both devices.';
+      'Photo and voice transfers go through the repeaters you pick, in order, even when the other device is in direct range. On the device that downloads, both the request and the answer take this route; the other device needs nothing set.';
 
   @override
   String mediaMesh_forceRouteOnVia(String route) {

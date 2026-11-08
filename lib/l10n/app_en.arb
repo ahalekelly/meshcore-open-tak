@@ -3827,7 +3827,7 @@
   "mediaMesh_frequencyMain": "Must differ from the main radio",
   "mediaMesh_footer": "Everyone sharing photos must use the same radio2 settings. The radio switches between both frequencies, so heavy media traffic costs some main-mesh reception.",
   "mediaMesh_forceRoute": "Send photos and voice through repeaters",
-  "mediaMesh_forceRouteHelp": "Photo and voice transfers go through the repeaters you pick, in order, even when the other device is in direct range. Turn it on on both devices.",
+  "mediaMesh_forceRouteHelp": "Photo and voice transfers go through the repeaters you pick, in order, even when the other device is in direct range. On the device that downloads, both the request and the answer take this route; the other device needs nothing set.",
   "mediaMesh_forceRouteOnVia": "On · via {route}",
   "@mediaMesh_forceRouteOnVia": {"placeholders": {"route": {"type": "String"}}},
   "mediaMesh_forceRouteOffVia": "Off · via {route}",
