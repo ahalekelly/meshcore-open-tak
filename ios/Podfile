@@ -30,6 +30,9 @@ target 'Runner' do
   pod 'codec2', :path => '../third_party/codec2'
   # ggwave (MIT): share by sound (lib/sound/ggwave_ffi.dart finds it in the process).
   pod 'ggwave', :path => '../third_party/ggwave'
+  # AV1 still images (libaom, BSD-2) for photo messages; CI builds libaom
+  # into third_party/vox_av1/aom-ios/, otherwise a stub builds.
+  pod 'vox_av1', :path => '../third_party/vox_av1'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
@@ -54,6 +57,10 @@ post_install do |installer|
     ggwave_init ggwave_free ggwave_encode ggwave_ndecode
     ggwave_getDefaultParameters ggwave_setLogFile
   ]
+  # Only when libaom is there: the stub has no vox_av1_* to keep.
+  if File.exist?(File.join(__dir__, '..', 'third_party', 'vox_av1', 'aom-ios', 'lib', 'libaom.a'))
+    ffi_symbols += %w[vox_av1_encode vox_av1_decode]
+  end
   keep = ffi_symbols.map { |s| "-Wl,-u,_#{s}" }.join(' ')
   installer.aggregate_targets.each do |agg|
     agg.user_build_configurations.each_key do |config_name|
