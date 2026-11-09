@@ -47,6 +47,7 @@ import 'vox_rx_path.dart';
 import 'vox_voice_enhance.dart';
 import 'voice_wire.dart';
 import 'walkie_wire.dart';
+import 'wav_source.dart';
 import 'vox_timing.dart';
 import 'transfer_test.dart';
 import '../utils/lora_airtime.dart';
@@ -1994,7 +1995,7 @@ class VoxVoiceService extends ChangeNotifier {
     notifyListeners();
     _logEvent('playing (ready after ${sw.elapsedMilliseconds}ms)', sid);
     try {
-      await player.play(BytesSource(wav));
+      await player.play(await voxWavSource(wav));
     } catch (e) {
       _logEvent('playback failed: $e', sid);
       if (gen == _playGen) _endPlayback();

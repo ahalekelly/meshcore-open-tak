@@ -11,6 +11,8 @@ import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 
+import '../vox/wav_source.dart';
+
 /// One tone in a sound: [hz] (0 = silence), [ms] long, at [level] (0-1).
 /// [toHz] slides the pitch; [decay] fades it out like a struck bell.
 class _Tone {
@@ -150,7 +152,7 @@ class WatchSoundPlayer {
     try {
       final p = _player ??= AudioPlayer();
       await p.stop();
-      await p.play(BytesSource(_cache.putIfAbsent(s, s.wav)));
+      await p.play(await voxWavSource(_cache.putIfAbsent(s, s.wav)));
     } catch (_) {
       // No audio output (a test, a desktop without sound): stay quiet.
     }

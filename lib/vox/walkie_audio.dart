@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'wav.dart';
+import 'wav_source.dart';
 
 class WalkieSpeaker {
   WalkieSpeaker();
@@ -85,7 +86,7 @@ class WalkieSpeaker {
     _playing = true;
     final wav = voxPcm16ToWav(_queue.removeFirst(), sampleRate: sampleRate);
     unawaited(
-      p.play(BytesSource(wav)).catchError((Object _) {
+      voxWavSource(wav).then(p.play).catchError((Object _) {
         _playing = false;
       }),
     );
