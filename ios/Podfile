@@ -61,7 +61,9 @@ post_install do |installer|
   if File.exist?(File.join(__dir__, '..', 'third_party', 'vox_av1', 'aom-ios', 'lib', 'libaom.a'))
     ffi_symbols += %w[vox_av1_encode vox_av1_decode]
   end
-  keep = ffi_symbols.map { |s| "-Wl,-u,_#{s}" }.join(' ')
+  # -u pulls each one out of its static library; -exported_symbol makes it a
+  # dead-strip root and keeps it in Runner's export table for dlsym.
+  keep = ffi_symbols.map { |s| "-Wl,-u,_#{s} -Wl,-exported_symbol,_#{s}" }.join(' ')
   installer.aggregate_targets.each do |agg|
     agg.user_build_configurations.each_key do |config_name|
       path = agg.xcconfig_path(config_name)

@@ -432,9 +432,14 @@ jobs:
         run: |
           set -euo pipefail
           bin=build/ios/iphoneos/Runner.app/Runner
+          grep -h OTHER_LDFLAGS ios/Pods/Target\ Support\ Files/Pods-Runner/*.xcconfig | cut -c1-300 || true
+          nm -gU "$bin" > /tmp/runner-syms.txt || true
+          wc -l /tmp/runner-syms.txt
+          missing=0
           for sym in codec2_create ggwave_init vox_av1_encode vox_av1_decode; do
-            nm -gU "$bin" | grep -q " _$sym\$" || { echo "::error::$sym is not in Runner"; exit 1; }
+            grep -q " _$sym\$" /tmp/runner-syms.txt || { echo "::error::$sym is not in Runner"; missing=1; }
           done
+          exit $missing
       # App Store Connect rejects a framework whose MinimumOSVersion is below its binary's (ITMS-90208).
       - name: Check framework minimum iOS versions
         run: |
