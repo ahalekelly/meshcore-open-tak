@@ -36,5 +36,7 @@
 	<string>This app lets you pick a photo to compress and send over the mesh.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>MeshCore Open TAK needs the microphone to record voice messages.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>MeshCore Open TAK uses your location to share your position with your team and to map MediaMesh coverage.</string>
 </dict>
 </plist>
