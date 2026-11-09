@@ -30,6 +30,9 @@ target 'Runner' do
   pod 'codec2', :path => '../third_party/codec2'
   # ggwave (MIT): share by sound (lib/sound/ggwave_ffi.dart finds it in the process).
   pod 'ggwave', :path => '../third_party/ggwave'
+  # AV1 still images (libaom, BSD-2) for photo messages; CI builds libaom
+  # into third_party/vox_av1/aom-ios/, otherwise a stub builds.
+  pod 'vox_av1', :path => '../third_party/vox_av1'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
@@ -39,6 +42,39 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.4'
+    end
+  end
+
+  # Dart finds Codec2 and ggwave in the app itself (DynamicLibrary.process() in
+  # lib/services/codec2_ffi.dart and lib/sound/ggwave_ffi.dart). No native code
+  # calls them, so the linker left both static libraries out of the Runner
+  # binary: voice messages and Sound link were missing on iOS. -u makes the
+  # linker take each symbol (and keeps it through dead-stripping); stripping
+  # only non-global symbols keeps their names for the lookup.
+  ffi_symbols = %w[
+    codec2_create codec2_destroy codec2_encode codec2_decode
+    codec2_samples_per_frame codec2_bytes_per_frame
+    ggwave_init ggwave_free ggwave_encode ggwave_ndecode
+    ggwave_getDefaultParameters ggwave_setLogFile
+  ]
+  # Only when libaom is there: the stub has no vox_av1_* to keep.
+  if File.exist?(File.join(__dir__, '..', 'third_party', 'vox_av1', 'aom-ios', 'lib', 'libaom.a'))
+    ffi_symbols += %w[vox_av1_encode vox_av1_decode]
+  end
+  # -u pulls each one out of its static library; -exported_symbol makes it a
+  # dead-strip root and keeps it in Runner's export table for dlsym.
+  keep = ffi_symbols.map { |s| "-Wl,-u,_#{s} -Wl,-exported_symbol,_#{s}" }.join(' ')
+  installer.aggregate_targets.each do |agg|
+    agg.user_build_configurations.each_key do |config_name|
+      path = agg.xcconfig_path(config_name)
+      next unless File.exist?(path)
+      xc = File.read(path)
+      next if xc.include?('-Wl,-u,_codec2_create')
+      unless xc.sub!(/^OTHER_LDFLAGS = \$\(inherited\)/, "OTHER_LDFLAGS = $(inherited) #{keep}")
+        xc << "\nOTHER_LDFLAGS = $(inherited) #{keep}\n"
+      end
+      xc << "\nSTRIP_STYLE = non-global\n"
+      File.write(path, xc)
     end
   end
 end
