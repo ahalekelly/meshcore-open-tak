@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
+import '../vox/wav_source.dart';
 import 'quick_reply_ui.dart';
 import 'team_service.dart';
 import 'team_wire.dart';
@@ -68,7 +69,7 @@ class _TeamAlertHostState extends State<TeamAlertHost> {
     if (on) {
       final p = _player ??= AudioPlayer();
       await p.setReleaseMode(ReleaseMode.loop);
-      await p.play(BytesSource(_alarmWav()));
+      await p.play(await voxWavSource(_alarmWav()));
       _buzz = Timer.periodic(
         const Duration(milliseconds: 800),
         (_) => HapticFeedback.heavyImpact(),

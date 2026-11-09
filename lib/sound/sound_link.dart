@@ -13,6 +13,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:record/record.dart';
 
 import '../vox/wav.dart';
+import '../vox/wav_source.dart';
 import 'ggwave_ffi.dart';
 
 const int _rate = 48000;
@@ -58,7 +59,9 @@ class SoundLink {
     });
     _playing = true;
     try {
-      await p.play(BytesSource(voxPcm16ToWav(pcm, sampleRate: _rate)));
+      await p.play(
+        await voxWavSource(voxPcm16ToWav(pcm, sampleRate: _rate)),
+      );
       await done.future.timeout(
         Duration(milliseconds: ms + 3000),
         onTimeout: () {},

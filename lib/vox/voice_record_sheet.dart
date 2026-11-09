@@ -13,6 +13,7 @@ import 'mimi.dart';
 import 'resample.dart';
 import 'voice_message_bubble.dart' show VoxCodec2QualityPicker, showVoxVoiceLog;
 import 'voice_service.dart';
+import 'wav_source.dart';
 
 /// Mic button for a chat composer. Hidden when no voice codec is available.
 class VoxMicButton extends StatelessWidget {
@@ -181,7 +182,7 @@ class _VoxRecordSheetState extends State<VoxRecordSheet> {
       final wav = await (_previewWav ??= context
           .read<VoxVoiceService>()
           .previewWav(clip));
-      await _player.play(BytesSource(wav));
+      await _player.play(await voxWavSource(wav));
     } catch (e) {
       if (mounted) setState(() => _error = 'Preview failed: $e');
     } finally {
