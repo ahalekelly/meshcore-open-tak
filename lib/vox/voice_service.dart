@@ -2522,6 +2522,10 @@ class VoxVoiceService extends ChangeNotifier {
         );
       }
     }
+    // A copy of a packet we have (a repeater's relay of the push, another
+    // listener's answer) says nothing about our request. It must not restart
+    // the wait: a trickle of them held off asking again for over 2 minutes.
+    if (!fresh) return;
     final sid = clip.envelope.sessionId;
     if (clip.isComplete) {
       clip.watchdog?.cancel();
@@ -2592,6 +2596,44 @@ class VoxVoiceService extends ChangeNotifier {
         b.suppressed++;
       }
     }
+  }
+
+  /// When another node last sent a packet of [sid], or null.
+  DateTime? _lastHeard(String sid) {
+    DateTime? last;
+    for (final t in (_heardIdx[sid] ?? const <int, DateTime>{}).values) {
+      if (last == null || t.isAfter(last)) last = t;
+    }
+    return last;
+  }
+
+  /// Before a holder that isn't the sender answers for [sid]: while its
+  /// packets are still on the air (the push, or someone else's answer),
+  /// sending would talk over them on the same frequency and lose packets on
+  /// both. Waits until none has been heard for four zero-hop gaps (at least
+  /// 2 s), at most 20 s. False when a newer request replaced this one.
+  Future<bool> _waitForAirQuiet(String sid, String key, int gen) async {
+    final quiet = Duration(
+      milliseconds: max(2000, _zeroHopGap().inMilliseconds * 4),
+    );
+    final until = DateTime.now().add(const Duration(seconds: 20));
+    var logged = false;
+    while (true) {
+      final last = _lastHeard(sid);
+      final now = DateTime.now();
+      final since = last == null ? quiet : now.difference(last);
+      if (since >= quiet || now.isAfter(until)) break;
+      if (!logged) {
+        _logEvent(
+          'its packets are still on the air: answering once they stop',
+          sid,
+        );
+        logged = true;
+      }
+      await Future<void>.delayed(quiet - since);
+      if (_serveGen[key] != gen) return false;
+    }
+    return true;
   }
 
   /// Indices of [sid] heard from another node since [t].
@@ -3316,16 +3358,19 @@ class VoxVoiceService extends ChangeNotifier {
       return;
     }
     final whole = await _loadFromStore(req.sessionId);
-    final held = whole ? _heldPackets(req.sessionId) : _partialFor(req);
+    var held = whole ? _heldPackets(req.sessionId) : _partialFor(req);
     if (held == null) {
       _logEvent('asked for a clip we do not have', req.sessionId);
       return;
     }
+    final own = _ownClips.contains(req.sessionId);
+    // From here, what another node sends of it is left out of our answer.
+    final asked = DateTime.now();
+    if (!own && !await _waitForAirQuiet(req.sessionId, key, gen)) return;
+    if (!whole) held = _partialFor(req) ?? held;
     // A zero-hop request (an empty path) reached every radio in range: let
     // the sender go first, and anyone else wait a moment and leave out what
     // they hear someone else send meanwhile.
-    final own = _ownClips.contains(req.sessionId);
-    final asked = DateTime.now();
     if (!own && req.requesterPath != null && req.requesterPath!.isEmpty) {
       await Future<void>.delayed(
         Duration(milliseconds: (whole ? 1000 : 2500) + _rng.nextInt(2000)),
