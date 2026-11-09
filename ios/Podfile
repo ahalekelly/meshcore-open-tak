@@ -41,4 +41,31 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.4'
     end
   end
+
+  # Dart finds Codec2 and ggwave in the app itself (DynamicLibrary.process() in
+  # lib/services/codec2_ffi.dart and lib/sound/ggwave_ffi.dart). No native code
+  # calls them, so the linker left both static libraries out of the Runner
+  # binary: voice messages and Sound link were missing on iOS. -u makes the
+  # linker take each symbol (and keeps it through dead-stripping); stripping
+  # only non-global symbols keeps their names for the lookup.
+  ffi_symbols = %w[
+    codec2_create codec2_destroy codec2_encode codec2_decode
+    codec2_samples_per_frame codec2_bytes_per_frame
+    ggwave_init ggwave_free ggwave_encode ggwave_ndecode
+    ggwave_getDefaultParameters ggwave_setLogFile
+  ]
+  keep = ffi_symbols.map { |s| "-Wl,-u,_#{s}" }.join(' ')
+  installer.aggregate_targets.each do |agg|
+    agg.user_build_configurations.each_key do |config_name|
+      path = agg.xcconfig_path(config_name)
+      next unless File.exist?(path)
+      xc = File.read(path)
+      next if xc.include?('-Wl,-u,_codec2_create')
+      unless xc.sub!(/^OTHER_LDFLAGS = \$\(inherited\)/, "OTHER_LDFLAGS = $(inherited) #{keep}")
+        xc << "\nOTHER_LDFLAGS = $(inherited) #{keep}\n"
+      end
+      xc << "\nSTRIP_STYLE = non-global\n"
+      File.write(path, xc)
+    end
+  end
 end
